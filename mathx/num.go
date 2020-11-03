@@ -1,0 +1,24 @@
+// Package mathx contains various math utilities.
+package mathx
+
+// MinInt returns the smaller of the given numbers.
+func MinInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// MaxInt returns the larger of the given numbers.
+func MaxInt(a, b int) int {
+	if a < b {
+		return b
+	}
+	return a
+}
+
+// CeilDivInt returns the ceiling of a/b, where a and b are positive integers. The positive requirement avoids the
+// otherwise numerous corner cases. See e.g.: https://ericlippert.com/2013/01/28/integer-division-that-rounds-up/.
+func CeilDivInt(a, b int) int {
+	return (a-1)/b + 1
+}
