@@ -7,18 +7,6 @@ import (
 	"os"
 )
 
-// Severity represents the severity of the log message.
-type Severity int
-
-const (
-	SevUnspecified Severity = iota
-	SevDebug
-	SevInfo
-	SevWarn
-	SevError
-	SevFatal
-)
-
 // Logger is a context-aware logging backend. The richer context allows for more sophisticated logging setups.
 // Must be concurrency safe. Should respect ordering.
 type Logger interface {
@@ -32,7 +20,7 @@ type Logger interface {
 }
 
 var (
-	logger Logger = &Standard{Level: SevUnspecified}
+	logger Logger = &Standard{}
 )
 
 // SetLogger sets the global Logger. Intended to be called during initialization only.

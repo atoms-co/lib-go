@@ -14,18 +14,12 @@ const (
 
 // Standard is a wrapper over the standard Go log package.
 type Standard struct {
-	// Level is the severity cutoff for log messages. By default all messages are logged.
-	Level Severity
 	// Color enables colorful log output
 	Color bool
 }
 
 // Log writes the message to stdlog, optionally using 8-ANSI colors for different log levels.
 func (s *Standard) Log(ctx context.Context, sev Severity, calldepth int, msg string) {
-	if sev < s.Level {
-		return
-	}
-
 	if s.Color && sev != SevInfo {
 		color := DebugColor
 		switch sev {
