@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// FieldOption enriches an log message with Zap fields, usually extracted from the context.
+// FieldOption enriches a log message with Zap fields, usually extracted from the context.
 type FieldOption func(ctx context.Context, sev log.Severity, calldepth int, msg string) []z.Field
 
 type logger struct {
