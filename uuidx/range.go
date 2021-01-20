@@ -1,0 +1,102 @@
+// Package uuidx holds UUID utility functionality, notably logic for splitting UUID ranges.
+package uuidx
+
+import (
+	"bytes"
+	"fmt"
+	"math/big"
+
+	"github.com/google/uuid"
+)
+
+var (
+	// Domain is a the full UUID range.
+	Domain = Range{from: uuid.Nil, to: uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff")}
+)
+
+// Range represents a half-open UUID range [from, to).
+type Range struct {
+	from, to uuid.UUID
+}
+
+// NewRange returns a shard from the given from and to UUID.
+func NewRange(from, to uuid.UUID) (Range, error) {
+	if Compare(from, to) >= 0 {
+		return Range{}, fmt.Errorf("range start UUID must be less than the end UUID")
+	}
+
+	return Range{
+		from: from,
+		to:   to,
+	}, nil
+}
+
+func (s Range) From() uuid.UUID {
+	return s.from
+}
+
+func (s Range) To() uuid.UUID {
+	return s.to
+}
+
+// Contains returns true iff the given key is in the half-open range.
+func (s Range) Contains(key uuid.UUID) bool {
+	return Compare(s.from, key) <= 0 && Compare(key, s.to) < 0
+}
+
+// Size returns the number of UUIDs in the range.
+func (s Range) Size() *big.Int {
+	return big.NewInt(0).Sub(big.NewInt(0).SetBytes(s.to[:]), big.NewInt(0).SetBytes(s.from[:]))
+}
+
+func (s Range) String() string {
+	return fmt.Sprintf("[%s;%s)", s.from.String(), s.to.String())
+}
+
+// Split uniformly splits the given range into N sub-ranges of equal size.
+func Split(s Range, numPartitions int) ([]Range, error) {
+	start := s.From()
+	end := s.To()
+	if numPartitions <= 0 {
+		return []Range{}, fmt.Errorf("number of partitions should atleast be 1")
+	}
+
+	ranges := make([]Range, numPartitions)
+
+	// size of each partition = ((end - start + 1) / numPartitions).
+	tokenRange := big.NewInt(0)
+	partSize := big.NewInt(0)
+	partSize = partSize.Sub(big.NewInt(0).SetBytes(end[:]), big.NewInt(0).SetBytes(start[:]))
+	partSize = partSize.Add(partSize, big.NewInt(1))
+	// each partition should atleast hold atleast one UUID.
+	if partSize.Cmp(big.NewInt(1)) < 0 {
+		return []Range{}, fmt.Errorf("number of partitions > total number of UUIDs in range: (%v)", s.String())
+	}
+	partSize = partSize.Div(partSize, big.NewInt(int64(numPartitions)))
+
+	var to uuid.UUID
+	var err error
+	for partition := 0; partition < numPartitions; partition++ {
+		if partition == numPartitions-1 {
+			to = end
+		} else {
+			// multiply the current partition number with its size and convert to UUID.
+			tokenRange.Mul(partSize, big.NewInt(int64(partition+1)))
+			if to, err = uuid.FromBytes(tokenRange.Bytes()); err != nil {
+				return []Range{}, fmt.Errorf("partition range: %v", err)
+			}
+		}
+
+		split, _ := NewRange(start, to)
+		ranges[partition] = split
+		start = to
+	}
+
+	return ranges, nil
+}
+
+// Compare compares the given UUIDs a and b. The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+func Compare(a, b uuid.UUID) int {
+	// Note: UUID is [16]byte and bytes.Compare needs a []byte.
+	return bytes.Compare(a[:], b[:])
+}
