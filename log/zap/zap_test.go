@@ -2,6 +2,7 @@ package zap_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"go.atoms.co/lib/log"
@@ -58,6 +59,6 @@ func TestLogger(t *testing.T) {
 
 		entry := <-entries
 		assert.Equal(t, entry.Message, "bar")
-		assert.Equal(t, entry.Caller.FullPath(), "log/zap/zap_test.go:15")
+		assert.True(t, strings.HasSuffix(entry.Caller.FullPath(), "log/zap/zap_test.go:16"))
 	})
 }
