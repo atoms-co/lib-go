@@ -46,6 +46,9 @@ func initAppName(appName string) {
 }
 
 func (r *recorder) Increment(ctx context.Context, delta int, tags ...Tag) {
+	if delta == 0 {
+		return
+	}
 	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(float64(delta)))
 }
 
