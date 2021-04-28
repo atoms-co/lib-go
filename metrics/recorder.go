@@ -38,6 +38,15 @@ var (
 		NumBuckets:  20,
 		LatencyUnit: time.Second,
 	}
+
+	// SlowBucketOptions sets latency histogram from 1ms to 6h, instead of the default 5m. Useful for operations or
+	// flows that may become very slow during outages.
+	SlowBucketOptions = &BucketOptions{
+		Start:       0.001, // 1ms
+		End:         21600, // 6h
+		NumBuckets:  25,
+		LatencyUnit: time.Second,
+	}
 )
 
 // initAppName sets up the default tag used for all metrics.
