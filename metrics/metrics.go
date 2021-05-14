@@ -3,6 +3,7 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.opencensus.io/plugin/ocgrpc"
@@ -34,6 +35,10 @@ type Key string
 type Tag struct {
 	Key   Key
 	Value string
+}
+
+func (t Tag) String() string {
+	return fmt.Sprintf("%v:%v", t.Key, t.Value)
 }
 
 const (
