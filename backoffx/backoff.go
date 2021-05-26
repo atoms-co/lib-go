@@ -4,7 +4,7 @@ package backoffx
 import (
 	"time"
 
-	"github.com/benbjohnson/clock"
+	"go.atoms.co/lib/clock"
 	"github.com/cenkalti/backoff/v4"
 )
 
