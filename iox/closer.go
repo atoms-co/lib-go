@@ -1,7 +1,11 @@
 // Package iox contains various io utilities.
 package iox
 
-import "go.uber.org/atomic"
+import (
+	"context"
+
+	"go.uber.org/atomic"
+)
 
 // AsyncCloser is an async closer that support a quit chan as a close notification mechanism. Thread-safe.
 type AsyncCloser interface {
@@ -19,6 +23,7 @@ type asyncCloser struct {
 	closed atomic.Bool
 }
 
+// NewAsyncCloser returns a new open closer.
 func NewAsyncCloser() AsyncCloser {
 	return &asyncCloser{quit: make(chan struct{})}
 }
@@ -35,4 +40,16 @@ func (c *asyncCloser) Close() {
 	if c.closed.CAS(false, true) {
 		close(c.quit)
 	}
+}
+
+// WithCancel closes the closer on context closure. Returns original closure for convenience.
+func WithCancel(ctx context.Context, closer AsyncCloser) AsyncCloser {
+	go func() {
+		select {
+		case <-ctx.Done():
+			closer.Close()
+		case <-closer.Closed():
+		}
+	}()
+	return closer
 }
