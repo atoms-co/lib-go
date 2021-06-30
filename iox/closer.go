@@ -53,3 +53,15 @@ func WithCancel(ctx context.Context, closer AsyncCloser) AsyncCloser {
 	}()
 	return closer
 }
+
+// WithCascade closes the closer, if the upstream if closed. Returns original closure for convenience.
+func WithCascade(upstream, closer AsyncCloser) AsyncCloser {
+	go func() {
+		select {
+		case <-upstream.Closed():
+			closer.Close()
+		case <-upstream.Closed():
+		}
+	}()
+	return closer
+}
