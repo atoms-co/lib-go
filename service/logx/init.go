@@ -37,7 +37,7 @@ func load() log.Logger {
 		return &log.Standard{Color: true}
 
 	case "stackdriver":
-		return zap.NewStackdriver()
+		return zap.NewStackdriver(zap.WithContextFields)
 
 	default:
 		panic(fmt.Sprintf("Unknown logger: %v", *logger))

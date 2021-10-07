@@ -3,6 +3,7 @@ package zap
 
 import (
 	"context"
+
 	"go.cloudkitchens.org/lib/log"
 	z "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -60,5 +61,71 @@ func toLevel(sev log.Severity) zapcore.Level {
 
 	default:
 		return zapcore.InfoLevel
+	}
+}
+
+func WithContextFields(ctx context.Context, sev log.Severity, calldepth int, msg string) []z.Field {
+	generic := log.FromContext(ctx)
+	zfields := make([]z.Field, 0, len(generic))
+	for _, field := range generic {
+		zfields = append(zfields, z.Field{
+			Key:       field.Key,
+			Type:      zapType(field.Type),
+			Integer:   field.Integer,
+			String:    field.String,
+			Interface: field.Interface,
+		})
+	}
+	return zfields
+}
+
+func zapType(logType log.FieldType) zapcore.FieldType {
+	switch logType {
+	// BinaryType indicates that the field carries an opaque binary blob.
+	case log.BinaryType:
+		return zapcore.BinaryType
+	case log.BoolType:
+		return zapcore.BoolType
+	case log.ByteStringType:
+		return zapcore.ByteStringType
+	case log.Complex128Type:
+		return zapcore.Complex128Type
+	case log.Complex64Type:
+		return zapcore.Complex64Type
+	case log.DurationType:
+		return zapcore.DurationType
+	case log.Float64Type:
+		return zapcore.Float64Type
+	case log.Float32Type:
+		return zapcore.Float32Type
+	case log.Int64Type:
+		return zapcore.Int64Type
+	case log.Int32Type:
+		return zapcore.Int32Type
+	case log.Int16Type:
+		return zapcore.Int16Type
+	case log.Int8Type:
+		return zapcore.Int8Type
+	case log.StringType:
+		return zapcore.StringType
+	case log.TimeType:
+		return zapcore.TimeType
+	case log.TimeFullType:
+		return zapcore.TimeFullType
+	case log.Uint64Type:
+		return zapcore.Uint64Type
+	case log.Uint32Type:
+		return zapcore.Uint32Type
+	case log.Uint16Type:
+		return zapcore.Uint16Type
+	case log.Uint8Type:
+		return zapcore.Uint8Type
+	case log.UintptrType:
+		return zapcore.UintptrType
+	case log.StringerType:
+		return zapcore.StringerType
+	default:
+		// UnknownType is the default field type. Attempting to add it to an encoder will panic.
+		return zapcore.UnknownType
 	}
 }
