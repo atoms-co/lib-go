@@ -44,23 +44,16 @@ func (c *asyncCloser) Close() {
 
 // WithCancel closes the closer on context closure. Returns original closure for convenience.
 func WithCancel(ctx context.Context, closer AsyncCloser) AsyncCloser {
-	go func() {
-		select {
-		case <-ctx.Done():
-			closer.Close()
-		case <-closer.Closed():
-		}
-	}()
-	return closer
+	return WithQuit(ctx.Done(), closer)
 }
 
-// WithCascade closes the closer, if the upstream if closed. Returns original closure for convenience.
-func WithCascade(upstream, closer AsyncCloser) AsyncCloser {
+// WithQuit closes the closer, if the quit channel if closed. Returns original closure for convenience.
+func WithQuit(quit <-chan struct{}, closer AsyncCloser) AsyncCloser {
 	go func() {
 		select {
-		case <-upstream.Closed():
+		case <-quit:
 			closer.Close()
-		case <-upstream.Closed():
+		case <-quit:
 		}
 	}()
 	return closer
