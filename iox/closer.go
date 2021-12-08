@@ -13,7 +13,6 @@ type AsyncCloser interface {
 	IsClosed() bool
 	// Closed returns a quit chan that is closed iff the instance is closed.
 	Closed() <-chan struct{}
-
 	// Close closes the instance. No error is returned as it is usually called in a defer.
 	Close()
 }
