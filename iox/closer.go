@@ -52,7 +52,7 @@ func WithQuit(quit <-chan struct{}, closer AsyncCloser) AsyncCloser {
 		select {
 		case <-quit:
 			closer.Close()
-		case <-quit:
+		case <-closer.Closed():
 		}
 	}()
 	return closer
