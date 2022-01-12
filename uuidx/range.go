@@ -65,14 +65,16 @@ func Split(s Range, numPartitions int) ([]Range, error) {
 
 	// size of each partition = ((end - start + 1) / numPartitions).
 	tokenRange := big.NewInt(0)
+	// (end - start + 1)
+	total := big.NewInt(0)
+	total = total.Sub(big.NewInt(0).SetBytes(end[:]), big.NewInt(0).SetBytes(start[:])).Add(total, big.NewInt(1))
+	// ((end - start + 1) / numPartitions)
 	partSize := big.NewInt(0)
-	partSize = partSize.Sub(big.NewInt(0).SetBytes(end[:]), big.NewInt(0).SetBytes(start[:]))
-	partSize = partSize.Add(partSize, big.NewInt(1))
+	partSize = partSize.Div(total, big.NewInt(int64(numPartitions)))
 	// each partition should atleast hold atleast one UUID.
 	if partSize.Cmp(big.NewInt(1)) < 0 {
 		return []Range{}, fmt.Errorf("number of partitions > total number of UUIDs in range: (%v)", s.String())
 	}
-	partSize = partSize.Div(partSize, big.NewInt(int64(numPartitions)))
 
 	var to uuid.UUID
 	var err error
@@ -82,7 +84,9 @@ func Split(s Range, numPartitions int) ([]Range, error) {
 		} else {
 			// multiply the current partition number with its size and convert to UUID.
 			tokenRange.Mul(partSize, big.NewInt(int64(partition+1)))
-			if to, err = uuid.FromBytes(tokenRange.Bytes()); err != nil {
+			// must be 16 bytes to work with uuid
+			tokenRangeBytes := make([]byte, 16)
+			if to, err = uuid.FromBytes(tokenRange.FillBytes(tokenRangeBytes)); err != nil {
 				return []Range{}, fmt.Errorf("partition range: %v", err)
 			}
 		}
