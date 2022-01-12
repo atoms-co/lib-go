@@ -44,6 +44,33 @@ func TestShards(t *testing.T) {
 	}
 }
 
+// Test if we pad big int representations correctly for a magnitudes of numbers
+func TestMagnitudes(t *testing.T) {
+	ranges, err := uuidx.Split(uuidx.Domain, 1)
+	assert.Nil(t, err)
+	assert.Len(t, ranges, 1)
+
+	ranges, err = uuidx.Split(uuidx.Domain, 10)
+	assert.Nil(t, err)
+	assert.Len(t, ranges, 10)
+
+	ranges, err = uuidx.Split(uuidx.Domain, 100)
+	assert.Nil(t, err)
+	assert.Len(t, ranges, 100)
+
+	ranges, err = uuidx.Split(uuidx.Domain, 1000)
+	assert.Nil(t, err)
+	assert.Len(t, ranges, 1000)
+
+	ranges, err = uuidx.Split(uuidx.Domain, 10000)
+	assert.Nil(t, err)
+	assert.Len(t, ranges, 10000)
+
+	ranges, err = uuidx.Split(uuidx.Domain, 100000)
+	assert.Nil(t, err)
+	assert.Len(t, ranges, 100000)
+}
+
 // TestShardsInvalid tests some basic invalid inputs.
 func TestShardsInvalid(t *testing.T) {
 	_, err := uuidx.NewRange(uuidx.Domain.To(), uuidx.Domain.From())
