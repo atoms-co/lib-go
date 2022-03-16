@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.cloudkitchens.org/lib/statshandlerx"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/runmetrics"
 	"go.opencensus.io/stats/view"
@@ -90,7 +91,7 @@ func NewHistogram(name Name, description string, bucketOptions *BucketOptions, t
 
 // WithGrpcStatsHandler sets up the grpc stats handler.
 func WithGrpcStatsHandler() grpc.ServerOption {
-	return grpc.StatsHandler(&ocgrpc.ServerHandler{})
+	return grpc.StatsHandler(&statshandlerx.ServerHandler{})
 }
 
 func Init(appName string) error {
