@@ -44,6 +44,21 @@ func TestShards(t *testing.T) {
 	}
 }
 
+func TestDivisible(t *testing.T) {
+	quants := []int{8, 16, 32, 64}
+
+	for _, quant := range quants {
+		ranges, err := uuidx.Split(uuidx.Domain, quant)
+		assert.Nil(t, err)
+		ranges2, err := uuidx.Split(uuidx.Domain, quant*2)
+		assert.Nil(t, err)
+		for ii := 0; ii < quant; ii++ {
+			assert.Equal(t, ranges[ii].From().String(), ranges2[ii*2].From().String(), "%v shards doesn't subdivide cleanly", quant)
+			assert.Equal(t, ranges[ii].To().String(), ranges2[ii*2+1].To().String(), "%v shards doesn't subdivide cleanly", quant)
+		}
+	}
+}
+
 // Test if we pad big int representations correctly for a magnitudes of numbers
 func TestMagnitudes(t *testing.T) {
 	ranges, err := uuidx.Split(uuidx.Domain, 1)
