@@ -172,6 +172,37 @@ func getExponentialBuckets(start, end float64, n int) []float64 {
 	return buckets
 }
 
+// getUniformBuckets splits buckets evenly based on the start, end and num buckets
+// and returns the buckets. We thus want, for given start, end and N:
+//
+// for i in [0; N-1], end - start are evenly divided. boundary[0] = start.
+func getUniformBuckets(start, end float64, n int) []float64 {
+	if start < 0 {
+		start = 1.0
+	}
+	n = mathx.MinInt(mathx.MaxInt(n, 2), maxBuckets)
+
+	buckets := make([]float64, n)
+	step := (end - start) / float64(n-1)
+
+	buckets[0] = start
+	buckets[n-1] = end
+	for i := 1; i < n-1; i++ {
+		buckets[i] = start + math.Round(step*float64(i))
+	}
+
+	return dropNonPosBuckets(buckets)
+}
+
+func dropNonPosBuckets(input []float64) []float64 {
+	for i, v := range input {
+		if v > 0 {
+			return input[i:]
+		}
+	}
+	return []float64{}
+}
+
 // getBuckets uses an underlying utility function to get the exponential buckets.
 func getBuckets(opt *BucketOptions) []float64 {
 	if opt == nil {
@@ -183,7 +214,11 @@ func getBuckets(opt *BucketOptions) []float64 {
 	start := opt.Start * unit
 	end := opt.End * unit
 
-	return getExponentialBuckets(start, end, opt.NumBuckets)
+	if opt.DistributionType == Exponential {
+		return getExponentialBuckets(start, end, opt.NumBuckets)
+	} else {
+		return getUniformBuckets(start, end, opt.NumBuckets)
+	}
 }
 
 func setupHistogram(name string, description string, bucketOptions *BucketOptions, tagKeys []Key) (*recorder, error) {
