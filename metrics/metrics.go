@@ -13,6 +13,13 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Distribution int
+
+const (
+	Exponential Distribution = iota
+	Uniform
+)
+
 // Name is the name of the metric.
 type Name = string
 
@@ -26,6 +33,8 @@ type BucketOptions struct {
 	NumBuckets int
 	// LatencyUnit - "time.Second" or "time.Millisecond".
 	LatencyUnit time.Duration
+	// Distribution
+	DistributionType Distribution
 }
 
 // Key is a metric tag key.
