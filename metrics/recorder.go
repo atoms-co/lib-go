@@ -194,6 +194,20 @@ func getUniformBuckets(start, end float64, n int) []float64 {
 	return dropNonPosBuckets(buckets)
 }
 
+func getUserDefinedBuckets(buckets []float64, unit float64) []float64 {
+	if len(buckets) < 2 {
+		panic("user-defined bucket size must be >= 2")
+	}
+	var ret []float64
+	for i, b := range buckets {
+		if i == maxBuckets {
+			return ret
+		}
+		ret = append(ret, b*unit)
+	}
+	return ret
+}
+
 func dropNonPosBuckets(input []float64) []float64 {
 	for i, v := range input {
 		if v > 0 {
@@ -216,6 +230,8 @@ func getBuckets(opt *BucketOptions) []float64 {
 
 	if opt.DistributionType == Exponential {
 		return getExponentialBuckets(start, end, opt.NumBuckets)
+	} else if opt.DistributionType == UserDefined {
+		return getUserDefinedBuckets(opt.UserDefinedBuckets, unit)
 	} else {
 		return getUniformBuckets(start, end, opt.NumBuckets)
 	}

@@ -18,6 +18,7 @@ type Distribution int
 const (
 	Exponential Distribution = iota
 	Uniform
+	UserDefined
 )
 
 // Name is the name of the metric.
@@ -35,6 +36,9 @@ type BucketOptions struct {
 	LatencyUnit time.Duration
 	// Distribution
 	DistributionType Distribution
+	// Required for UserDefined distribution, all other options will be ignored.
+	// the length should be < maxBuckets
+	UserDefinedBuckets []float64
 }
 
 // Key is a metric tag key.
