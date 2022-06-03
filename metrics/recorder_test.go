@@ -28,3 +28,15 @@ func Test_GetExponentialBuckets(t *testing.T) {
 		}
 	}
 }
+
+func Test_GetUserDefinedBuckets(t *testing.T) {
+	buckets := getUserDefinedBuckets([]float64{1, 1.668, 2.782, 4.642, 7.743, 12.915}, 0.1)
+	expected := []float64{0.1, 0.1668, 0.2782, 0.4642, 0.7743, 1.2915}
+
+	tolerance := 0.001
+	for i := range buckets {
+		if math.Abs(buckets[i]-expected[i]) > tolerance {
+			t.Errorf("Expected %v, received %v", expected[i], buckets[i])
+		}
+	}
+}
