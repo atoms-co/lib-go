@@ -199,10 +199,7 @@ func getUserDefinedBuckets(buckets []float64, unit float64) []float64 {
 		panic("user-defined bucket size must be >= 2")
 	}
 	var ret []float64
-	for i, b := range buckets {
-		if i == maxBuckets {
-			return ret
-		}
+	for _, b := range buckets {
 		ret = append(ret, b*unit)
 	}
 	return ret
