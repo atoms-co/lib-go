@@ -37,7 +37,6 @@ type BucketOptions struct {
 	// Distribution
 	DistributionType Distribution
 	// Required for UserDefined distribution, all other options will be ignored.
-	// the length should be < maxBuckets
 	UserDefinedBuckets []float64
 }
 
