@@ -63,6 +63,10 @@ func (l *Lock) process() {
 			for i := 0; i < n; i++ {
 				l.pending.Dec()
 
+				if l.IsClosed() {
+					return // ensure Close + Unlock does not allow a lock
+				}
+
 				select {
 				case l.guard <- true:
 				default:
