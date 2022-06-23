@@ -293,16 +293,18 @@ func setupTags(r *recorder, tagKeys []Key) []tag.Key {
 }
 
 func getTagCtx(ctx context.Context, registeredKeys map[Key]bool, tags []Tag) context.Context {
+	var mutations []tag.Mutator
 	// get the tags passed in tags now overwriting any defaults.
 	for _, t := range tags {
 		// check if the key is registered.
 		if _, ok := registeredKeys[t.Key]; !ok {
 			log.Errorf(ctx, "Metrics tag with Key \"%v\" is not registered", t.Key)
 		}
-		ctx, _ = tag.New(ctx, tag.Upsert(tag.MustNewKey(string(t.Key)), t.Value))
+		mutations = append(mutations, tag.Upsert(tag.MustNewKey(string(t.Key)), t.Value))
 	}
 
 	// make sure to have the default tag too.
-	ctx, _ = tag.New(ctx, tag.Upsert(tag.MustNewKey(string(defaultTag.Key)), defaultTag.Value))
+	mutations = append(mutations, tag.Upsert(tag.MustNewKey(string(defaultTag.Key)), defaultTag.Value))
+	ctx, _ = tag.New(ctx, mutations...)
 	return ctx
 }
