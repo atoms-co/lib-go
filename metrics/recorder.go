@@ -194,13 +194,13 @@ func getUniformBuckets(start, end float64, n int) []float64 {
 	return dropNonPosBuckets(buckets)
 }
 
-func getUserDefinedBuckets(buckets []float64) []float64 {
+func getUserDefinedBuckets(buckets []float64, unit float64) []float64 {
 	if len(buckets) < 2 {
 		panic("user-defined bucket size must be >= 2")
 	}
 	var ret []float64
 	for _, b := range buckets {
-		ret = append(ret, b)
+		ret = append(ret, b*unit)
 	}
 	return ret
 }
@@ -228,27 +228,9 @@ func getBuckets(opt *BucketOptions) []float64 {
 	if opt.DistributionType == Exponential {
 		return getExponentialBuckets(start, end, opt.NumBuckets)
 	} else if opt.DistributionType == UserDefined {
-		return getUserDefinedBuckets(opt.UserDefinedBuckets)
+		return getUserDefinedBuckets(opt.UserDefinedBuckets, unit)
 	} else {
 		return getUniformBuckets(start, end, opt.NumBuckets)
-	}
-}
-
-func getUnit(opt *BucketOptions) string {
-	if opt == nil || opt.DistributionType != UserDefined {
-		return stats.UnitSeconds
-	}
-	switch opt.LatencyUnit {
-	case time.Nanosecond:
-		return "ns"
-	case time.Microsecond:
-		return "us"
-	case time.Millisecond:
-		return stats.UnitMilliseconds
-	case time.Second:
-		return stats.UnitSeconds
-	default:
-		return stats.UnitDimensionless
 	}
 }
 
@@ -257,7 +239,7 @@ func setupHistogram(name string, description string, bucketOptions *BucketOption
 		registeredKeys: make(map[Key]bool),
 	}
 	tags := setupTags(r, tagKeys)
-	m := stats.Float64(name, description, getUnit(bucketOptions))
+	m := stats.Float64(name, description, stats.UnitSeconds)
 	buckets := getBuckets(bucketOptions)
 	err := view.Register(&view.View{
 		Name:        name,
