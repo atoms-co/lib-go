@@ -104,3 +104,10 @@ func Compare(a, b uuid.UUID) int {
 	// Note: UUID is [16]byte and bytes.Compare needs a []byte.
 	return bytes.Compare(a[:], b[:])
 }
+
+// Inc returns the next uuid
+func Inc(n uuid.UUID) uuid.UUID {
+	next := big.NewInt(0).Add(big.NewInt(0).SetBytes(n[:]), big.NewInt(1))
+	ret, _ := uuid.FromBytes(next.FillBytes(make([]byte, 16)))
+	return ret
+}
