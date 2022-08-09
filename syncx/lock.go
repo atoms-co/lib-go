@@ -24,7 +24,7 @@ func NewLock(n int) *Lock {
 		pulse:       make(chan bool, 1),
 	}
 	for i := 0; i < n; i++ {
-		ret.Unlock()
+		ret.guard <- true
 	}
 	go ret.process()
 
