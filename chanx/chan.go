@@ -7,7 +7,7 @@ import (
 )
 
 // NewFixed returns a new closed chan with the given elements.
-func NewFixed[T any](elms ...T) chan T {
+func NewFixed[T any](elms ...T) <-chan T {
 	ret := make(chan T, len(elms))
 	for _, elm := range elms {
 		ret <- elm
@@ -17,7 +17,7 @@ func NewFixed[T any](elms ...T) chan T {
 }
 
 // ToList extracts all chan elements to a slice. Blocking.
-func ToList[T any](ch chan T) []T {
+func ToList[T any](ch <-chan T) []T {
 	var ret []T
 	for elm := range ch {
 		ret = append(ret, elm)
@@ -26,7 +26,7 @@ func ToList[T any](ch chan T) []T {
 }
 
 // Process processes all elements with the given level of concurrency. Blocking.
-func Process[T any](in chan T, n int, fn func(t T)) {
+func Process[T any](in <-chan T, n int, fn func(t T)) {
 	n = mathx.MaxInt(1, n)
 
 	var wg sync.WaitGroup
