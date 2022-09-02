@@ -42,13 +42,15 @@ func (l *Initializer) Complete() {
 	}
 }
 
-// Reset uncompletes initialization.
+// Reset uncompletes initialization, if done.
 func (l *Initializer) Reset() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	l.done = false
-	l.lock = nil
+	if l.done {
+		l.done = false
+		l.lock = nil
+	}
 }
 
 func (l *Initializer) Close() {
