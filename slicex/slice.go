@@ -1,0 +1,43 @@
+// Package slicex contains convenience utilities for working with slices. Some functionality here
+// is expected to be subsumed by the standard library at some point.
+package slicex
+
+// New returns a slice from zero or more values. Useful in non-vararg contexts.
+func New[T any](ts ...T) []T {
+	return ts
+}
+
+// Map transforms all elements.
+func Map[T, U any](list []T, fn func(T) U) []U {
+	var ret []U
+	for _, v := range list {
+		ret = append(ret, fn(v))
+	}
+	return ret
+}
+
+// MapIf transforms selected elements.
+func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
+	var ret []U
+	for _, v := range list {
+		if u, ok := fn(v); ok {
+			ret = append(ret, u)
+		}
+	}
+	return ret
+}
+
+// Clone makes a copy of the slice (with value copy of elements).
+func Clone[T any](list []T) []T {
+	return append([]T{}, list...)
+}
+
+// Contains returns true if at least one element satisfying the predicate is found
+func Contains[T any](list []T, fn func(T) bool) bool {
+	for _, v := range list {
+		if fn(v) {
+			return true
+		}
+	}
+	return false
+}

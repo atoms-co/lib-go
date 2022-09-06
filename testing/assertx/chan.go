@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	chanWait = 20 * time.Millisecond
+	chanWait = 50 * time.Millisecond
 )
 
 // Element requires an element in the given channel within a grace period.
 func Element[T any](t *testing.T, ch <-chan T, args ...any) T {
 	elm, ok := chanx.TryRead(ch, chanWait)
-	assert.True(t, ok, append([]any{"no chan element"}, args...))
+	assert.True(t, ok, append([]any{"no chan element:"}, args...))
 	return elm
 }
 
