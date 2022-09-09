@@ -9,6 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSplit(t *testing.T) {
+	from := uuid.MustParse("80000000-0000-0000-0000-000000000000")
+	to := uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff")
+
+	assert.Equal(t, -1, uuidx.Compare(from, to))
+
+	r, err := uuidx.NewRange(from, to)
+	assert.NoError(t, err)
+
+	size := 6
+	ranges, err := uuidx.Split(r, size)
+	assert.NoError(t, err)
+	assert.Equal(t, size, len(ranges))
+	assert.Equal(t, from, ranges[0].From())
+	assert.Equal(t, to, ranges[len(ranges)-1].To())
+}
+
 // TestShards verifies the basic range splitting logic.
 func TestShards(t *testing.T) {
 	from := uuid.MustParse("dc9076e9-2fda-4019-bd2c-900a8284b9c4")

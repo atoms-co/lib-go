@@ -9,10 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	// Domain is a the full UUID range.
-	Domain = Range{from: uuid.Nil, to: uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff")}
-)
+// Domain is a the full UUID range.
+var Domain = Range{from: uuid.Nil, to: uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff")}
 
 // Range represents a half-open UUID range [from, to).
 type Range struct {
@@ -82,8 +80,10 @@ func Split(s Range, numPartitions int) ([]Range, error) {
 		if partition == numPartitions-1 {
 			to = end
 		} else {
-			// multiply the current partition number with its size and convert to UUID.
-			tokenRange.Mul(partSize, big.NewInt(int64(partition+1)))
+			// `start` keeps getting re-extended so simply keep adding the partition size
+			// to the previous `start` to get the correct UUID boundary.
+			tokenRange.Add(partSize, big.NewInt(0).SetBytes(start[:]))
+
 			// must be 16 bytes to work with uuid
 			tokenRangeBytes := make([]byte, 16)
 			if to, err = uuid.FromBytes(tokenRange.FillBytes(tokenRangeBytes)); err != nil {
@@ -91,7 +91,11 @@ func Split(s Range, numPartitions int) ([]Range, error) {
 			}
 		}
 
-		split, _ := NewRange(start, to)
+		split, err := NewRange(start, to)
+		if err != nil {
+			return nil, fmt.Errorf("range [%s-%s] is invalid: %s", start, to, err)
+		}
+
 		ranges[partition] = split
 		start = to
 	}
