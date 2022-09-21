@@ -52,3 +52,17 @@ func Contains[T any](list []T, fn func(T) bool) bool {
 	}
 	return false
 }
+
+// ContainsT returns true if any of the elements are present in the list.
+func ContainsT[T comparable](list []T, elms ...T) bool {
+	m := map[T]bool{}
+	for _, elm := range elms {
+		m[elm] = true
+	}
+	for _, v := range list {
+		if m[v] {
+			return true
+		}
+	}
+	return false
+}
