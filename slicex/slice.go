@@ -32,7 +32,18 @@ func Clone[T any](list []T) []T {
 	return append([]T{}, list...)
 }
 
-// Contains returns true if at least one element satisfying the predicate is found
+// Count returns the number of elements satisfying the predicate.
+func Count[T any](list []T, fn func(T) bool) int {
+	ret := 0
+	for _, v := range list {
+		if fn(v) {
+			ret++
+		}
+	}
+	return ret
+}
+
+// Contains returns true if at least one element satisfying the predicate is found.
 func Contains[T any](list []T, fn func(T) bool) bool {
 	for _, v := range list {
 		if fn(v) {
