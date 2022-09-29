@@ -14,6 +14,7 @@ import (
 var (
 	logger = flag.String("logger", "stackdriver", "Logger to use")
 	level  = flag.String("log-level", "", "Log severity cutoff (default: no cutoff)")
+	long   = flag.Bool("log-long-filenames", false, "Enable long file names in log messages")
 )
 
 // Init initializes the global logger as configured via flags.
@@ -33,7 +34,11 @@ func filter(l log.Logger) log.Logger {
 func load() log.Logger {
 	switch *logger {
 	case "", "standard":
-		stdlog.SetFlags(stdlog.Ldate | stdlog.Lmicroseconds | stdlog.Lshortfile)
+		fileFlag := stdlog.Lshortfile
+		if *long {
+			fileFlag = stdlog.Llongfile
+		}
+		stdlog.SetFlags(stdlog.Ldate | stdlog.Lmicroseconds | fileFlag)
 		return &log.Standard{Color: true}
 
 	case "stackdriver":
