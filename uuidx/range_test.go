@@ -61,6 +61,81 @@ func TestShards(t *testing.T) {
 	}
 }
 
+func TestIntersect(t *testing.T) {
+	a := uuid.MustParse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+	b := uuid.MustParse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+	c := uuid.MustParse("cccccccc-cccc-cccc-cccc-cccccccccccc")
+	d := uuid.MustParse("dddddddd-dddd-dddd-dddd-dddddddddddd")
+	e := uuid.MustParse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")
+
+	s, _ := uuidx.NewRange(b, d)
+
+	assert.Equal(t, false, s.Contains(a))
+	assert.Equal(t, true, s.Contains(b))
+	assert.Equal(t, true, s.Contains(c))
+	assert.Equal(t, false, s.Contains(d))
+
+	r, _ := uuidx.NewRange(a, b)
+
+	// First verify our expected sematics match the established ones
+	xr, _ := uuidx.NewRange(a, b)
+	assert.Equal(t, true, xr.Contains(a))
+	assert.Equal(t, false, xr.Contains(b))
+
+	assert.Equal(t, true, r.Contains(a))
+	assert.Equal(t, false, r.Contains(b))
+
+	_, ok := r.Intersects(s)
+	assert.False(t, ok)
+
+	r, _ = uuidx.NewRange(b, c)
+
+	ir, ok := r.Intersects(s)
+	assert.True(t, ok)
+	assert.Equal(t, b, ir.From())
+	assert.Equal(t, c, ir.To())
+
+	r, _ = uuidx.NewRange(a, c)
+
+	ir, ok = r.Intersects(s)
+	assert.True(t, ok)
+	assert.Equal(t, b, ir.From())
+	assert.Equal(t, c, ir.To())
+
+	r, _ = uuidx.NewRange(a, d)
+
+	ir, ok = r.Intersects(s)
+	assert.True(t, ok)
+	assert.Equal(t, b, ir.From())
+	assert.Equal(t, d, ir.To())
+
+	r, _ = uuidx.NewRange(b, d)
+
+	ir, ok = r.Intersects(s)
+	assert.True(t, ok)
+	assert.Equal(t, b, ir.From())
+	assert.Equal(t, d, ir.To())
+
+	r, _ = uuidx.NewRange(uuidx.Domain.From(), uuidx.Domain.To())
+
+	ir, ok = r.Intersects(s)
+	assert.True(t, ok)
+	assert.Equal(t, b, ir.From())
+	assert.Equal(t, d, ir.To())
+
+	r, _ = uuidx.NewRange(c, e)
+
+	ir, ok = r.Intersects(s)
+	assert.True(t, ok)
+	assert.Equal(t, c, ir.From())
+	assert.Equal(t, d, ir.To())
+
+	r, _ = uuidx.NewRange(d, e)
+
+	_, ok = r.Intersects(s)
+	assert.False(t, ok)
+}
+
 func TestDivisible(t *testing.T) {
 	quants := []int{8, 16, 32, 64}
 
