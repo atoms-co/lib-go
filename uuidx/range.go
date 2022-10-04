@@ -29,6 +29,13 @@ func NewRange(from, to uuid.UUID) (Range, error) {
 	}, nil
 }
 
+func MustNewRange(from, to uuid.UUID) Range {
+	return Range{
+		from: from,
+		to:   to,
+	}
+}
+
 func (s Range) From() uuid.UUID {
 	return s.from
 }
@@ -40,6 +47,26 @@ func (s Range) To() uuid.UUID {
 // Contains returns true iff the given key is in the half-open range.
 func (s Range) Contains(key uuid.UUID) bool {
 	return Compare(s.from, key) <= 0 && Compare(key, s.to) < 0
+}
+
+// Intersects returns the range intersection of two ranges, and if it intersects.
+func (s Range) Intersects(r Range) (Range, bool) {
+	if Compare(r.from, s.to) >= 0 {
+		return Range{}, false
+	}
+	if Compare(r.to, s.from) <= 0 {
+		return Range{}, false
+	}
+	ret := r
+	if Compare(r.from, s.from) < 0 {
+		// this end of the range is for less than the full shard
+		ret.from = s.from
+	}
+	if Compare(r.to, s.to) > 0 {
+		// this end of the range is for less than the full shard
+		ret.to = s.to
+	}
+	return ret, true
 }
 
 // Size returns the number of UUIDs in the range.
