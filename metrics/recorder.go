@@ -221,9 +221,18 @@ func getBuckets(opt *BucketOptions) []float64 {
 	}
 
 	// convert units to seconds
-	unit := float64(opt.LatencyUnit) / float64(time.Second)
-	start := opt.Start * unit
-	end := opt.End * unit
+	var unit, start, end float64
+	switch opt.LatencyUnit {
+	case time.Millisecond:
+		unit = 1.0
+		start = opt.Start
+		end = opt.End
+	default:
+		// anything other than millisecond is reported in seconds, so scale buckets to that
+		unit = float64(opt.LatencyUnit) / float64(time.Second)
+		start = opt.Start * unit
+		end = opt.End * unit
+	}
 
 	if opt.DistributionType == Exponential {
 		return getExponentialBuckets(start, end, opt.NumBuckets)
@@ -239,7 +248,11 @@ func setupHistogram(name string, description string, bucketOptions *BucketOption
 		registeredKeys: make(map[Key]bool),
 	}
 	tags := setupTags(r, tagKeys)
-	m := stats.Float64(name, description, stats.UnitSeconds)
+	unit := stats.UnitSeconds
+	if bucketOptions != nil && bucketOptions.LatencyUnit == time.Millisecond {
+		unit = stats.UnitMilliseconds
+	}
+	m := stats.Float64(name, description, unit)
 	buckets := getBuckets(bucketOptions)
 	err := view.Register(&view.View{
 		Name:        name,
@@ -257,7 +270,14 @@ func setupHistogram(name string, description string, bucketOptions *BucketOption
 }
 
 func (r *recorder) Observe(ctx context.Context, elapsed time.Duration, tags ...Tag) {
-	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(elapsed.Seconds()))
+	var dur float64
+	switch r.measure.Unit() {
+	case stats.UnitMilliseconds:
+		dur = float64(elapsed.Milliseconds())
+	default:
+		dur = elapsed.Seconds()
+	}
+	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(dur))
 }
 
 func newHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys []Key) Histogram {
