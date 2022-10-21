@@ -28,3 +28,27 @@ func (f *filter) Log(ctx context.Context, sev Severity, calldepth int, msg strin
 func (f *filter) Flush(ctx context.Context) error {
 	return f.l.Flush(ctx)
 }
+
+type dynamicFilter struct {
+	l         Logger
+	shouldLog func(ctx context.Context, sev Severity) bool
+}
+
+// DynamicFilter is a wrapper that drops any logs given a dynamic condition
+func DynamicFilter(l Logger, shouldLog func(ctx context.Context, sev Severity) bool) Logger {
+	if l == nil {
+		panic("nil logger")
+	}
+	return &dynamicFilter{l: l, shouldLog: shouldLog}
+}
+
+func (f *dynamicFilter) Log(ctx context.Context, sev Severity, calldepth int, msg string) {
+	if !f.shouldLog(ctx, sev) {
+		return
+	}
+	f.l.Log(ctx, sev, calldepth+1, msg) // +1 for this frame
+}
+
+func (f *dynamicFilter) Flush(ctx context.Context) error {
+	return f.l.Flush(ctx)
+}
