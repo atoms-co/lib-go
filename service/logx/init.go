@@ -23,6 +23,12 @@ func Init(ctx context.Context) {
 	log.Debugf(ctx, "Initialized logger: %v, level: %v", *logger, *level)
 }
 
+// InitDynamic initializes the global logger as configured via flags.
+func InitDynamic(ctx context.Context, shouldLog func(ctx context.Context, sev log.Severity) bool) {
+	log.SetLogger(filter(log.DynamicFilter(load(), shouldLog)))
+	log.Debugf(ctx, "Initialized dynamic logger: %v, level: %v", *logger, *level)
+}
+
 func filter(l log.Logger) log.Logger {
 	sev, err := log.ParseSeverity(*level)
 	if err != nil {
