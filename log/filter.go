@@ -35,6 +35,7 @@ type dynamicFilter struct {
 }
 
 // DynamicFilter is a wrapper that drops any logs given a dynamic condition
+// shouldLog must be thread-safe
 func DynamicFilter(l Logger, shouldLog func(ctx context.Context, sev Severity) bool) Logger {
 	if l == nil {
 		panic("nil logger")
