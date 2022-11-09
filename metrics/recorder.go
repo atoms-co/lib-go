@@ -104,6 +104,40 @@ func newCounter(name Name, description string, tagKeys []Key) Counter {
 	return r
 }
 
+func newSingleViewCounter(name Name, description string, tagKeys []Key) Counter {
+	lock.Lock()
+	defer lock.Unlock()
+
+	_, existed := recorders[name]
+	if existed {
+		panic(fmt.Sprintf("Counter \"%v\" is already registered", name))
+	}
+
+	count := stats.Float64(name, description, stats.UnitDimensionless)
+	r := &recorder{
+		measure:        count,
+		registeredKeys: make(map[Key]bool),
+	}
+
+	tags := setupTags(r, tagKeys)
+
+	err := view.Register(
+		&view.View{
+			Name:        fmt.Sprintf("%s_total", name),
+			Description: description,
+			Measure:     count,
+			Aggregation: view.Sum(),
+			TagKeys:     tags,
+		},
+	)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to register counter: %v", err))
+	}
+
+	recorders[name] = r
+	return r
+}
+
 func (r *recorder) Set(ctx context.Context, value float64, tags ...Tag) {
 	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(value))
 }

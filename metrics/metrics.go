@@ -101,6 +101,16 @@ func NewHistogram(name Name, description string, bucketOptions *BucketOptions, t
 	return newHistogram(name, description, bucketOptions, tagKeys)
 }
 
+// NewSingleViewCounter instantiates a counter type for the given metrics name, description with
+// the given metric tag keys, if any. It is different from NewCounter, so it only creates a single
+// view to match the Java counterpart.
+//
+// Use NewSingleViewCounter if there's a Java counterpart producing counter metric with the same name
+// and it's important for metric names to match. In other cases, prefer NewCounter.
+func NewSingleViewCounter(name Name, description string, tagKeys ...Key) Counter {
+	return newSingleViewCounter(name, description, tagKeys)
+}
+
 // WithGrpcStatsHandler sets up the grpc stats handler.
 func WithGrpcStatsHandler() grpc.ServerOption {
 	return grpc.StatsHandler(&statshandlerx.ServerHandler{})
