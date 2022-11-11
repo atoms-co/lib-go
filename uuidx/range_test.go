@@ -1,6 +1,7 @@
 package uuidx_test
 
 import (
+	"fmt"
 	"testing"
 
 	"go.atoms.co/lib/uuidx"
@@ -8,6 +9,70 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func FuzzTestSplitByWeights(f *testing.F) {
+	f.Add(50, 40, 10)
+
+	f.Fuzz(func(t *testing.T, a, b, c int) {
+		weights := []int{a, b, c}
+
+		if a+b+c != 100 || a < 0 || b < 0 || c < 0 {
+			t.SkipNow()
+			return
+		}
+
+		shards, err := uuidx.SplitByWeights(uuidx.Domain, weights...)
+		assert.NoError(t, err)
+		assert.Equal(t, len(weights), len(shards))
+		assert.True(t, uuidx.IsRangeSerializable(shards...))
+
+		distributions := uuidx.RangeDistributions(shards...)
+		for i, distribution := range distributions {
+			assert.Equal(t, weights[i], int(distribution), fmt.Sprintf("actual distribution: %+v | expected: %+v", distributions, weights))
+		}
+	})
+}
+
+func TestSplitByWeights(t *testing.T) {
+	tests := []struct {
+		weights       []int
+		expectedError bool
+	}{
+		{weights: []int{100}},
+		{weights: []int{50, 50}},
+		{weights: []int{25, 25, 25, 25}},
+		{weights: []int{50, 25, 25}},
+		{weights: []int{25, 25, 50}},
+		{weights: []int{10, 90}},
+		{weights: []int{90, 10}},
+		{weights: []int{99, 1}},
+		{weights: []int{95, 5}},
+		{weights: []int{90, 5, 5}},
+		{weights: []int{23, 44, 33}},
+		{weights: []int{90, 0, 10}},
+		{weights: []int{58, 26, 16}},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(fmt.Sprintf("%v", test.weights), func(t *testing.T) {
+			shards, err := uuidx.SplitByWeights(uuidx.Domain, test.weights...)
+			if test.expectedError && err == nil {
+				t.Fatal("expected error but got <nil>")
+			} else if !test.expectedError && err != nil {
+				t.Fatalf("expected no error but got %s", err)
+			}
+
+			assert.Equal(t, len(test.weights), len(shards))
+			assert.True(t, uuidx.IsRangeSerializable(shards...))
+
+			distributions := uuidx.RangeDistributions(shards...)
+			for i, distribution := range distributions {
+				assert.Equal(t, test.weights[i], int(distribution), fmt.Sprintf("actual distribution: %+v | expected: %+v", distributions, test.weights))
+			}
+		})
+	}
+}
 
 func TestSplit(t *testing.T) {
 	from := uuid.MustParse("80000000-0000-0000-0000-000000000000")
