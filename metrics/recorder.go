@@ -123,7 +123,7 @@ func newSingleViewCounter(name Name, description string, tagKeys []Key) Counter 
 
 	err := view.Register(
 		&view.View{
-			Name:        fmt.Sprintf("%s_total", name),
+			Name:        name,
 			Description: description,
 			Measure:     count,
 			Aggregation: view.Sum(),
