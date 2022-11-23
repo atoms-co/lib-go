@@ -4,10 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 
 	promExporter "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/gorilla/mux"
-	"net/http"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"go.cloudkitchens.org/lib/log"
 	"go.cloudkitchens.org/lib/metrics"
@@ -22,7 +23,10 @@ var (
 func Init(ctx context.Context, application string) {
 	log.Infof(ctx, "Initializing prometheus metrics on :%v", *port)
 
-	pe, err := promExporter.NewExporter(promExporter.Options{})
+	pe, err := promExporter.NewExporter(promExporter.Options{
+		Registerer: prometheus.DefaultRegisterer,
+		Gatherer:   prometheus.DefaultGatherer,
+	})
 	if err != nil {
 		log.Exitf(ctx, "Failed to create Prometheus exporter: %v", err)
 	}
