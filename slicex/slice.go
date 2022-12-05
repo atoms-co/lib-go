@@ -16,6 +16,15 @@ func Map[T, U any](list []T, fn func(T) U) []U {
 	return ret
 }
 
+// FlatMap transforms all elements into a list and flattens it.
+func FlatMap[T, U any](list []T, fn func(T) []U) []U {
+	var ret []U
+	for _, v := range list {
+		ret = append(ret, fn(v)...)
+	}
+	return ret
+}
+
 // MapIf transforms selected elements.
 func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
 	var ret []U
@@ -23,6 +32,15 @@ func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
 		if u, ok := fn(v); ok {
 			ret = append(ret, u)
 		}
+	}
+	return ret
+}
+
+// Flatten flattens a slice of slices.
+func Flatten[T any](list [][]T) []T {
+	var ret []T
+	for _, v := range list {
+		ret = append(ret, v...)
 	}
 	return ret
 }
