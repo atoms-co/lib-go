@@ -50,6 +50,11 @@ func Clone[T any](list []T) []T {
 	return append([]T{}, list...)
 }
 
+// CopyAppend makes a copy of the slice (with value copy of elements) and appends the elements to the copy.
+func CopyAppend[T any](list []T, elms ...T) []T {
+	return append(Clone(list), elms...)
+}
+
 // Count returns the number of elements satisfying the predicate.
 func Count[T any](list []T, fn func(T) bool) int {
 	ret := 0
