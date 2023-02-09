@@ -89,3 +89,25 @@ func ContainsT[T comparable](list []T, elms ...T) bool {
 	}
 	return false
 }
+
+// First returns true and the element if at least one element satisfying the predicate is found.
+func First[T any](list []T, fn func(T) bool) (T, bool) {
+	for _, v := range list {
+		if fn(v) {
+			return v, true
+		}
+	}
+	var ret T
+	return ret, false
+}
+
+// Filter returns elements matching the filter function.
+func Filter[T any](list []T, fn func(T) bool) []T {
+	var ret []T
+	for _, v := range list {
+		if fn(v) {
+			ret = append(ret, v)
+		}
+	}
+	return ret
+}
