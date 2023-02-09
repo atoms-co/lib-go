@@ -86,3 +86,14 @@ func Contains[K comparable, V any](m map[K]V, k K) bool {
 	}
 	return false
 }
+
+// FilterKeys returns elements with Keys matching the filter function.
+func FilterKeys[K comparable, V any](m map[K]V, fn func(K) bool) map[K]V {
+	ret := make(map[K]V)
+	for k, v := range m {
+		if fn(k) {
+			ret[k] = v
+		}
+	}
+	return ret
+}
