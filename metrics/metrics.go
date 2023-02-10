@@ -40,6 +40,30 @@ type BucketOptions struct {
 	UserDefinedBuckets []float64
 }
 
+var (
+	// JavaBucketOptions are the options used by Java clients
+	JavaBucketOptions = &BucketOptions{
+		UserDefinedBuckets: []float64{
+			2.0,
+			5.0,
+			11.0,
+			23.0,
+			51.0,
+			112.0,
+			245.0,
+			537.0,
+			1179.0,
+			2588.0,
+			5679.0,
+			12461.0,
+			27344.0,
+			60000.0,
+		},
+		DistributionType: UserDefined,
+		LatencyUnit:      time.Millisecond,
+	}
+)
+
 // Key is a metric tag key.
 type Key string
 
