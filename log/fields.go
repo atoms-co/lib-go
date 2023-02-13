@@ -62,6 +62,8 @@ const (
 	UintptrType
 	// StringerType indicates that the field carries a fmt.Stringer.
 	StringerType
+	// ErrorType indicates that the field carries an error.
+	ErrorType
 )
 
 var (
@@ -396,4 +398,12 @@ func Durationp(key string, val *time.Duration) Field {
 		return nilField(key)
 	}
 	return Duration(key, *val)
+}
+
+// Err constructs a field that lazily stores err.Error() under the "error" key.
+// Errors which also implement fmt.Formatter (like those produced
+// by github.com/pkg/errors) will also have their verbose representation stored
+// under key+"Verbose". If passed a nil error, the field is a no-op.
+func Err(err error) Field {
+	return Field{Key: "error", Type: ErrorType, Interface: err}
 }
