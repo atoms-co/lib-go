@@ -124,6 +124,8 @@ func zapType(logType log.FieldType) zapcore.FieldType {
 		return zapcore.UintptrType
 	case log.StringerType:
 		return zapcore.StringerType
+	case log.ErrorType:
+		return zapcore.ErrorType
 	default:
 		// UnknownType is the default field type. Attempting to add it to an encoder will panic.
 		return zapcore.UnknownType
