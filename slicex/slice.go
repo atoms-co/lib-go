@@ -36,6 +36,19 @@ func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
 	return ret
 }
 
+// TryMap transforms all elements using the provided function or returns the first error.
+func TryMap[T, U any](list []T, fn func(T) (U, error)) ([]U, error) {
+	var ret []U
+	for _, v := range list {
+		u, err := fn(v)
+		if err != nil {
+			return []U{}, err
+		}
+		ret = append(ret, u)
+	}
+	return ret, nil
+}
+
 // Flatten flattens a slice of slices.
 func Flatten[T any](list [][]T) []T {
 	var ret []T
