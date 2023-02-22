@@ -10,11 +10,11 @@ import (
 // JitterBackoff adds jitter to an underlying backoff (like
 // backoff.ConstantBackoff)
 type JitterBackoff struct {
-	b         backoff.BackOff
+	b         BackOff
 	maxJitter time.Duration
 }
 
-func WithJitter(b backoff.BackOff, maxJitter time.Duration) *JitterBackoff {
+func WithJitter(b BackOff, maxJitter time.Duration) *JitterBackoff {
 	return &JitterBackoff{
 		b:         b,
 		maxJitter: maxJitter,

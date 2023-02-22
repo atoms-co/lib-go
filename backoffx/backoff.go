@@ -8,6 +8,8 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
+type BackOff = backoff.BackOff
+
 // Option represents an option for backoff.
 type Option struct {
 	fn  func(*backoff.ExponentialBackOff)
@@ -41,12 +43,12 @@ func WithMaxRetries(n int) Option {
 }
 
 // NewUnlimited returns a new exponential backoff without a max elapsed time.
-func NewUnlimited(opts ...Option) backoff.BackOff {
+func NewUnlimited(opts ...Option) BackOff {
 	return NewLimited(0, opts...)
 }
 
 // NewLimited returns a new exponential backoff with the given max elapsed time.
-func NewLimited(max time.Duration, opts ...Option) backoff.BackOff {
+func NewLimited(max time.Duration, opts ...Option) BackOff {
 	b := backoff.NewExponentialBackOff()
 	b.InitialInterval = 500 * time.Millisecond
 	b.MaxInterval = 5 * time.Second
@@ -69,12 +71,12 @@ func NewLimited(max time.Duration, opts ...Option) backoff.BackOff {
 }
 
 // Retry retries the given function per the backoff policy.
-func Retry(b backoff.BackOff, fn func() error) error {
+func Retry(b BackOff, fn func() error) error {
 	return backoff.Retry(fn, b)
 }
 
 // Retry1 retries the given function per the backoff policy.
-func Retry1[T1 any](b backoff.BackOff, fn func() (T1, error)) (T1, error) {
+func Retry1[T1 any](b BackOff, fn func() (T1, error)) (T1, error) {
 	var t1 T1
 	var err error
 	err = backoff.Retry(func() error {
@@ -89,7 +91,7 @@ func Retry1[T1 any](b backoff.BackOff, fn func() (T1, error)) (T1, error) {
 }
 
 // Retry2 retries the given function per the backoff policy.
-func Retry2[T1, T2 any](b backoff.BackOff, fn func() (T1, T2, error)) (T1, T2, error) {
+func Retry2[T1, T2 any](b BackOff, fn func() (T1, T2, error)) (T1, T2, error) {
 	var t1 T1
 	var t2 T2
 	var err error
@@ -106,7 +108,7 @@ func Retry2[T1, T2 any](b backoff.BackOff, fn func() (T1, T2, error)) (T1, T2, e
 }
 
 // Retry3 retries the given function per the backoff policy.
-func Retry3[T1, T2, T3 any](b backoff.BackOff, fn func() (T1, T2, T3, error)) (T1, T2, T3, error) {
+func Retry3[T1, T2, T3 any](b BackOff, fn func() (T1, T2, T3, error)) (T1, T2, T3, error) {
 	var t1 T1
 	var t2 T2
 	var t3 T3
