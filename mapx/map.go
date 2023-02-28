@@ -60,6 +60,15 @@ func MapValuesIf[K comparable, V, T any](m map[K]V, fn func(V) (T, bool)) []T {
 	return ret
 }
 
+// MapToSlice extracts all transformed entries to a slice.
+func MapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) T) []T {
+	var ret []T
+	for k, v := range m {
+		ret = append(ret, fn(k, v))
+	}
+	return ret
+}
+
 // Flatten extracts all value elements of a multi-map to a single slice.
 func Flatten[K comparable, V any](m map[K][]V) []V {
 	var ret []V
