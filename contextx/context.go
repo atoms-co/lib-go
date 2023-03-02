@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+// IsCancelled returns true if the context is cancelled, i.e, if ctx.Done() is closed.
+func IsCancelled(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
+}
+
 // WithQuitCancel returns a cancellable context. Additionally, if the quit channel is closed the context is cancelled.
 func WithQuitCancel(ctx context.Context, quit <-chan struct{}) (context.Context, context.CancelFunc) {
 	wctx, cancel := context.WithCancel(ctx)
