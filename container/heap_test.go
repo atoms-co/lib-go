@@ -1,6 +1,7 @@
-package container
+package container_test
 
 import (
+	"go.cloudkitchens.org/lib/container"
 	"sort"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestHeapInt(t *testing.T) {
-	heap := NewHeap[int](func(a, b int) bool { return a < b })
+	heap := container.NewHeap[int](func(a, b int) bool { return a < b })
 	values := []int{6, 5, 4, 8, 9, 10, 13, 12, 11, 7}
 
 	// Push
