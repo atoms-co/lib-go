@@ -11,6 +11,16 @@ func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
 	return ret
 }
 
+// MapNew returns a map from transformed values.
+func MapNew[K comparable, V any, T any](values []T, fn func(T) (K, V)) map[K]V {
+	ret := map[K]V{}
+	for _, t := range values {
+		k, v := fn(t)
+		ret[k] = v
+	}
+	return ret
+}
+
 // Keys extracts all keys to a slice.
 func Keys[K comparable, V any](m map[K]V) []K {
 	var ret []K
