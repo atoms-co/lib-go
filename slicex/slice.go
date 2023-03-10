@@ -9,7 +9,7 @@ func New[T any](ts ...T) []T {
 
 // Map transforms all elements.
 func Map[T, U any](list []T, fn func(T) U) []U {
-	var ret []U
+	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		ret = append(ret, fn(v))
 	}
@@ -18,7 +18,7 @@ func Map[T, U any](list []T, fn func(T) U) []U {
 
 // FlatMap transforms all elements into a list and flattens it.
 func FlatMap[T, U any](list []T, fn func(T) []U) []U {
-	var ret []U
+	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		ret = append(ret, fn(v)...)
 	}
@@ -27,7 +27,7 @@ func FlatMap[T, U any](list []T, fn func(T) []U) []U {
 
 // MapIf transforms selected elements.
 func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
-	var ret []U
+	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		if u, ok := fn(v); ok {
 			ret = append(ret, u)
@@ -38,7 +38,7 @@ func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
 
 // TryMap transforms all elements using the provided function or returns the first error.
 func TryMap[T, U any](list []T, fn func(T) (U, error)) ([]U, error) {
-	var ret []U
+	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		u, err := fn(v)
 		if err != nil {
@@ -51,7 +51,11 @@ func TryMap[T, U any](list []T, fn func(T) (U, error)) ([]U, error) {
 
 // Flatten flattens a slice of slices.
 func Flatten[T any](list [][]T) []T {
-	var ret []T
+	size := 0
+	for _, v := range list {
+		size += len(v)
+	}
+	ret := make([]T, 0, size)
 	for _, v := range list {
 		ret = append(ret, v...)
 	}
@@ -65,7 +69,10 @@ func Clone[T any](list []T) []T {
 
 // CopyAppend makes a copy of the slice (with value copy of elements) and appends the elements to the copy.
 func CopyAppend[T any](list []T, elms ...T) []T {
-	return append(Clone(list), elms...)
+	ret := make([]T, 0, len(list)+len(elms))
+	ret = append(ret, list...)
+	ret = append(ret, elms...)
+	return ret
 }
 
 // Count returns the number of elements satisfying the predicate.
@@ -81,12 +88,8 @@ func Count[T any](list []T, fn func(T) bool) int {
 
 // Contains returns true if at least one element satisfying the predicate is found.
 func Contains[T any](list []T, fn func(T) bool) bool {
-	for _, v := range list {
-		if fn(v) {
-			return true
-		}
-	}
-	return false
+	_, ok := First(list, fn)
+	return ok
 }
 
 // ContainsT returns true if any of the elements are present in the list.
@@ -103,7 +106,7 @@ func ContainsT[T comparable](list []T, elms ...T) bool {
 	return false
 }
 
-// First returns true and the element if at least one element satisfying the predicate is found.
+// First returns the first element satisfying the predicate.
 func First[T any](list []T, fn func(T) bool) (T, bool) {
 	for _, v := range list {
 		if fn(v) {
