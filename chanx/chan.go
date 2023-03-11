@@ -26,6 +26,34 @@ func ToList[T any](ch <-chan T) []T {
 	return ret
 }
 
+// Map transforms each element of the chan async. The returned chan is closed when the input is closed.
+func Map[T, U any](in <-chan T, size int, fn func(t T) U) <-chan U {
+	ret := make(chan U, size)
+	go func() {
+		defer close(ret)
+		for elm := range in {
+			ret <- fn(elm)
+		}
+	}()
+	return ret
+}
+
+// MapAppend transforms each element of the chan async, after injecting the given set of messages. The
+// returned chan is closed when the input is closed.
+func MapAppend[T, U any](list []U, in <-chan T, size int, fn func(t T) U) <-chan U {
+	ret := make(chan U, mathx.Max(size, len(list)))
+	for _, elm := range list {
+		ret <- elm
+	}
+	go func() {
+		defer close(ret)
+		for elm := range in {
+			ret <- fn(elm)
+		}
+	}()
+	return ret
+}
+
 // Process processes all elements with the given level of concurrency. Blocking.
 func Process[T any](in <-chan T, n int, fn func(t T)) {
 	n = mathx.MaxInt(1, n)
