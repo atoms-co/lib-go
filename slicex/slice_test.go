@@ -239,3 +239,13 @@ func TestFilter(t *testing.T) {
 		require.Equal(t, slicex.Filter([]int{1, 2, 3, 4, 5, 6}, f), []int{2, 4, 6})
 	})
 }
+
+func TestSet(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		require.Empty(t, slicex.NewSet[int]())
+	})
+
+	t.Run("nonempty", func(t *testing.T) {
+		require.Equal(t, slicex.NewSet(1, 2, 3, 3, 5), map[int]bool{1: true, 2: true, 3: true, 5: true})
+	})
+}

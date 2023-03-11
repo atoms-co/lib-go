@@ -127,3 +127,12 @@ func Filter[T any](list []T, fn func(T) bool) []T {
 	}
 	return ret
 }
+
+// NewSet creates a new set (represented as a map from a key to a bool) from the given elements.
+func NewSet[T comparable](keys ...T) map[T]bool {
+	m := make(map[T]bool, len(keys))
+	for _, k := range keys {
+		m[k] = true
+	}
+	return m
+}
