@@ -38,6 +38,20 @@ func Map[T, U any](in <-chan T, size int, fn func(t T) U) <-chan U {
 	return ret
 }
 
+// MapIf transforms selected element of the chan async. The returned chan is closed when the input is closed.
+func MapIf[T, U any](in <-chan T, size int, fn func(t T) (U, bool)) <-chan U {
+	ret := make(chan U, size)
+	go func() {
+		defer close(ret)
+		for elm := range in {
+			if u, ok := fn(elm); ok {
+				ret <- u
+			}
+		}
+	}()
+	return ret
+}
+
 // MapAppend transforms each element of the chan async, after injecting the given set of messages. The
 // returned chan is closed when the input is closed.
 func MapAppend[T, U any](list []U, in <-chan T, size int, fn func(t T) U) <-chan U {
