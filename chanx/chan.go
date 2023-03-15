@@ -26,9 +26,24 @@ func ToList[T any](ch <-chan T) []T {
 	return ret
 }
 
+// Append injects the given set of messages. The returned chan is closed when the input is closed.
+func Append[T any](list []T, in <-chan T) <-chan T {
+	ret := make(chan T, len(list))
+	for _, elm := range list {
+		ret <- elm
+	}
+	go func() {
+		defer close(ret)
+		for elm := range in {
+			ret <- elm
+		}
+	}()
+	return ret
+}
+
 // Map transforms each element of the chan async. The returned chan is closed when the input is closed.
-func Map[T, U any](in <-chan T, size int, fn func(t T) U) <-chan U {
-	ret := make(chan U, size)
+func Map[T, U any](in <-chan T, fn func(t T) U) <-chan U {
+	ret := make(chan U)
 	go func() {
 		defer close(ret)
 		for elm := range in {
@@ -39,8 +54,8 @@ func Map[T, U any](in <-chan T, size int, fn func(t T) U) <-chan U {
 }
 
 // MapIf transforms selected element of the chan async. The returned chan is closed when the input is closed.
-func MapIf[T, U any](in <-chan T, size int, fn func(t T) (U, bool)) <-chan U {
-	ret := make(chan U, size)
+func MapIf[T, U any](in <-chan T, fn func(t T) (U, bool)) <-chan U {
+	ret := make(chan U)
 	go func() {
 		defer close(ret)
 		for elm := range in {
@@ -54,8 +69,8 @@ func MapIf[T, U any](in <-chan T, size int, fn func(t T) (U, bool)) <-chan U {
 
 // MapAppend transforms each element of the chan async, after injecting the given set of messages. The
 // returned chan is closed when the input is closed.
-func MapAppend[T, U any](list []U, in <-chan T, size int, fn func(t T) U) <-chan U {
-	ret := make(chan U, mathx.Max(size, len(list)))
+func MapAppend[T, U any](list []U, in <-chan T, fn func(t T) U) <-chan U {
+	ret := make(chan U, len(list))
 	for _, elm := range list {
 		ret <- elm
 	}
