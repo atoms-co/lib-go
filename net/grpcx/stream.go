@@ -27,10 +27,10 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 	// Start reading async first to allow the server to see any registration messages.
 
 	in := make(chan A, bufChanSize)
-	defer close(in)
 
 	go func() {
 		defer quit.Close()
+		defer close(in)
 
 		for !quit.IsClosed() {
 			msg, err := server.Recv()
