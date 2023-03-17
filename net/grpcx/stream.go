@@ -18,6 +18,12 @@ const (
 // obviously take the initiative.
 type Handler[A, B any] func(ctx context.Context, in <-chan A) (<-chan B, error)
 
+// Stream is the high-level grpcx streaming interface, which matches the generated types for streaming methods.
+type Stream[A, B any] interface {
+	Send(B) error
+	Recv() (A, error)
+}
+
 // Receive is a server handler for the given stream. The context must be the server context. Blocking.
 func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler[A, B]) error {
 	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())      // ctx closed => quit
@@ -74,12 +80,6 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 			return nil
 		}
 	}
-}
-
-// Stream is the high-level grpx streaming interface, which matches the generated types for streaming methods.
-type Stream[A, B any] interface {
-	Send(B) error
-	Recv() (A, error)
 }
 
 // Connect connects the client handler to a compatible grpc streaming service method. Stopped by context

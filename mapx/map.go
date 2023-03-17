@@ -50,6 +50,16 @@ func ValuesIf[K comparable, V any](m map[K]V, fn func(V) bool) []V {
 	return ret
 }
 
+// Map extracts all transformed keys and values to a map.
+func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]V1 {
+	ret := make(map[K1]V1)
+	for k, v := range m {
+		k1, v1 := fn(k, v)
+		ret[k1] = v1
+	}
+	return ret
+}
+
 // MapValues extracts all transformed values to a slice.
 func MapValues[K comparable, V, T any](m map[K]V, fn func(V) T) []T {
 	var ret []T
