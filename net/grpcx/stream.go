@@ -131,7 +131,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 			if quit.IsClosed() {
 				return nil
 			}
-			log.Warnf(ctx, "Send failed: %v", err)
+			log.Warnf(ctx, "Recv failed: %v", err)
 			return nil
 		}
 
