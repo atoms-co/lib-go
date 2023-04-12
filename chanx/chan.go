@@ -83,6 +83,29 @@ func MapAppend[T, U any](list []U, in <-chan T, fn func(t T) U) <-chan U {
 	return ret
 }
 
+// Join combines each element of the chans async. The returned chan is closed when either input is closed.
+func Join[T any](in1 <-chan T, in2 <-chan T) chan T {
+	ret := make(chan T, mathx.MaxInt(len(in1), len(in2)))
+	go func() {
+		defer close(ret)
+		for {
+			select {
+			case m, ok := <-in1:
+				if !ok {
+					return
+				}
+				ret <- m
+			case m, ok := <-in2:
+				if !ok {
+					return
+				}
+				ret <- m
+			}
+		}
+	}()
+	return ret
+}
+
 // Process processes all elements with the given level of concurrency. Blocking.
 func Process[T any](in <-chan T, n int, fn func(t T)) {
 	n = mathx.MaxInt(1, n)
