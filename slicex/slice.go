@@ -8,6 +8,7 @@ func New[T any](ts ...T) []T {
 }
 
 // Map transforms all elements.
+// Deprecated: Use https://github.com/samber/lo#map
 func Map[T, U any](list []T, fn func(T) U) []U {
 	ret := make([]U, 0, len(list))
 	for _, v := range list {
@@ -17,6 +18,7 @@ func Map[T, U any](list []T, fn func(T) U) []U {
 }
 
 // FlatMap transforms all elements into a list and flattens it.
+// Deprecated: Use https://github.com/samber/lo#flatmap
 func FlatMap[T, U any](list []T, fn func(T) []U) []U {
 	ret := make([]U, 0, len(list))
 	for _, v := range list {
@@ -50,6 +52,7 @@ func TryMap[T, U any](list []T, fn func(T) (U, error)) ([]U, error) {
 }
 
 // Flatten flattens a slice of slices.
+// Deprecated: Use https://github.com/samber/lo#flatten
 func Flatten[T any](list [][]T) []T {
 	size := 0
 	for _, v := range list {
@@ -76,6 +79,7 @@ func CopyAppend[T any](list []T, elms ...T) []T {
 }
 
 // Count returns the number of elements satisfying the predicate.
+// Deprecated: Use https://github.com/samber/lo#countby
 func Count[T any](list []T, fn func(T) bool) int {
 	ret := 0
 	for _, v := range list {
@@ -87,12 +91,14 @@ func Count[T any](list []T, fn func(T) bool) int {
 }
 
 // Contains returns true if at least one element satisfying the predicate is found.
+// Deprecated: Use https://github.com/samber/lo#containsby
 func Contains[T any](list []T, fn func(T) bool) bool {
 	_, ok := First(list, fn)
 	return ok
 }
 
 // ContainsT returns true if any of the elements are present in the list.
+// Deprecated: Use https://github.com/samber/lo#contains
 func ContainsT[T comparable](list []T, elms ...T) bool {
 	m := map[T]bool{}
 	for _, elm := range elms {
@@ -107,6 +113,7 @@ func ContainsT[T comparable](list []T, elms ...T) bool {
 }
 
 // First returns the first element satisfying the predicate.
+// Deprecated: Use https://github.com/samber/lo#findindexof
 func First[T any](list []T, fn func(T) bool) (T, bool) {
 	for _, v := range list {
 		if fn(v) {
@@ -118,6 +125,7 @@ func First[T any](list []T, fn func(T) bool) (T, bool) {
 }
 
 // Filter returns elements matching the filter function.
+// Deprecated: Use https://github.com/samber/lo#filter
 func Filter[T any](list []T, fn func(T) bool) []T {
 	var ret []T
 	for _, v := range list {
