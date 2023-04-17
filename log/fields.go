@@ -264,8 +264,8 @@ func Int8p(key string, val *int8) Field {
 }
 
 // String constructs a field with the given key and value.
-func String(key string, val string) Field {
-	return Field{Key: key, Type: StringType, String: val}
+func String[T ~string](key string, val T) Field {
+	return Field{Key: key, Type: StringType, String: string(val)}
 }
 
 // Stringp constructs a field that carries a *string. The returned Field will safely
