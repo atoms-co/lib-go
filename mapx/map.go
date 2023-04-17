@@ -22,7 +22,6 @@ func MapNew[K comparable, V any, T any](values []T, fn func(T) (K, V)) map[K]V {
 }
 
 // Keys extracts all keys to a slice.
-// Deprecated: Use https://github.com/samber/lo#keys
 func Keys[K comparable, V any](m map[K]V) []K {
 	var ret []K
 	for k := range m {
@@ -32,7 +31,6 @@ func Keys[K comparable, V any](m map[K]V) []K {
 }
 
 // Values extracts all values to a slice.
-// Deprecated: Use https://github.com/samber/lo#values
 func Values[K comparable, V any](m map[K]V) []V {
 	var ret []V
 	for _, v := range m {
@@ -53,7 +51,6 @@ func ValuesIf[K comparable, V any](m map[K]V, fn func(V) bool) []V {
 }
 
 // Map extracts all transformed keys and values to a map.
-// Deprecated: Use https://github.com/samber/lo#mapentries
 func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]V1 {
 	ret := make(map[K1]V1)
 	for k, v := range m {
@@ -64,7 +61,6 @@ func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]
 }
 
 // MapValues extracts all transformed values to a slice.
-// Deprecated: Use https://github.com/samber/lo#maptoslice
 func MapValues[K comparable, V, T any](m map[K]V, fn func(V) T) []T {
 	var ret []T
 	for _, v := range m {
@@ -85,7 +81,6 @@ func MapValuesIf[K comparable, V, T any](m map[K]V, fn func(V) (T, bool)) []T {
 }
 
 // MapToSlice extracts all transformed entries to a slice.
-// Deprecated: Use https://github.com/samber/lo#maptoslice
 func MapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) T) []T {
 	var ret []T
 	for k, v := range m {
