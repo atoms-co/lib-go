@@ -89,6 +89,19 @@ func MapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) T) []T {
 	return ret
 }
 
+// TryMapToSlice extracts all transformed entries to a slice.
+func TryMapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) (T, error)) ([]T, error) {
+	ret := make([]T, 0, len(m))
+	for k, v := range m {
+		e, err := fn(k, v)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, e)
+	}
+	return ret, nil
+}
+
 // Flatten extracts all value elements of a multi-map to a single slice.
 func Flatten[K comparable, V any](m map[K][]V) []V {
 	var ret []V
