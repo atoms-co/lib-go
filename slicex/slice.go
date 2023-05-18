@@ -117,6 +117,16 @@ func First[T any](list []T, fn func(T) bool) (T, bool) {
 	return ret, false
 }
 
+// FirstIndex returns the first index of the element satisfying the predicate.
+func FirstIndex[T any](list []T, fn func(T) bool) (int, bool) {
+	for i, v := range list {
+		if fn(v) {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
 // Filter returns elements matching the filter function.
 func Filter[T any](list []T, fn func(T) bool) []T {
 	var ret []T
