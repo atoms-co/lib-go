@@ -229,6 +229,11 @@ func Compare(a, b uuid.UUID) int {
 	return bytes.Compare(a[:], b[:])
 }
 
+// Less returns a < b. For convenience in sorting
+func Less(a, b uuid.UUID) bool {
+	return Compare(a, b) < 0
+}
+
 // Inc returns the next uuid
 func Inc(n uuid.UUID) uuid.UUID {
 	next := big.NewInt(0).Add(big.NewInt(0).SetBytes(n[:]), big.NewInt(1))
