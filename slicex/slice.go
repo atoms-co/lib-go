@@ -146,3 +146,16 @@ func NewSet[T comparable](keys ...T) map[T]bool {
 	}
 	return m
 }
+
+// Equal determines if two lists are equal
+func Equal[T comparable](list1, list2 []T) bool {
+	if len(list1) != len(list2) {
+		return false
+	}
+	for i := range list1 {
+		if list1[i] != list2[i] {
+			return false
+		}
+	}
+	return true
+}
