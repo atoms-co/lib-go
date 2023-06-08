@@ -150,7 +150,8 @@ func Init(appName string) error {
 	}
 
 	return runmetrics.Enable(runmetrics.RunMetricOptions{
-		EnableCPU:    true,
-		EnableMemory: true,
+		EnableCPU:            true,
+		EnableMemory:         true,
+		UseDerivedCumulative: true,
 	})
 }
