@@ -64,6 +64,8 @@ const (
 	StringerType
 	// ErrorType indicates that the field carries an error.
 	ErrorType
+	// SkipType indicates that the field is a no-op.
+	SkipType
 )
 
 var (
@@ -405,5 +407,14 @@ func Durationp(key string, val *time.Duration) Field {
 // by github.com/pkg/errors) will also have their verbose representation stored
 // under key+"Verbose". If passed a nil error, the field is a no-op.
 func Err(err error) Field {
+	if err == nil {
+		return Skip()
+	}
 	return Field{Key: "error", Type: ErrorType, Interface: err}
+}
+
+// Skip constructs a no-op field, which is often useful when handling invalid
+// inputs in other Field constructors.
+func Skip() Field {
+	return Field{Type: SkipType}
 }
