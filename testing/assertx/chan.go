@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	chanWait = 50 * time.Millisecond
+	chanWait = 100 * time.Millisecond
 )
 
 // Element requires an element in the given channel within a grace period.
