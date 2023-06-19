@@ -11,11 +11,11 @@ import (
 func TestBroadcaster_SingleConsumer(t *testing.T) {
 	ctx := context.Background()
 
-	b := chanx.NewBroadcaster[int](ctx)
+	b := chanx.NewBroadcaster[int]()
 	defer b.Close()
 
 	// (1) Connect consumer
-	out, quit := b.Connect(ctx)
+	out, quit := b.Connect()
 
 	// (2) Forward channel
 	in := make(chan int, 1)
@@ -38,11 +38,11 @@ func TestBroadcaster_SingleConsumer(t *testing.T) {
 func TestBroadcaster_MultiConsumer(t *testing.T) {
 	ctx := context.Background()
 
-	b := chanx.NewBroadcaster[int](ctx)
+	b := chanx.NewBroadcaster[int]()
 	defer b.Close()
 
 	// (1) Connect consumer 1
-	out1, quit1 := b.Connect(ctx)
+	out1, quit1 := b.Connect()
 
 	// (2) Forward channel
 	in := make(chan int, 1)
@@ -54,7 +54,7 @@ func TestBroadcaster_MultiConsumer(t *testing.T) {
 	assert.Equal(t, 1, m1)
 
 	// (4) Connect consumer 2, receives first message
-	out2, quit2 := b.Connect(ctx)
+	out2, quit2 := b.Connect()
 	defer quit2.Close()
 	m2 := read(t, out2)
 	assert.Equal(t, 1, m2)
@@ -73,11 +73,11 @@ func TestBroadcaster_MultiConsumer(t *testing.T) {
 func TestBroadcaster_ChangeForward(t *testing.T) {
 	ctx := context.Background()
 
-	b := chanx.NewBroadcaster[int](ctx)
+	b := chanx.NewBroadcaster[int]()
 	defer b.Close()
 
 	// (1) Connect consumer
-	out, quit := b.Connect(ctx)
+	out, quit := b.Connect()
 
 	// (2) Forward channel
 	in := make(chan int, 1)
