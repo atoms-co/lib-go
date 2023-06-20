@@ -23,7 +23,7 @@ func MapNew[K comparable, V any, T any](values []T, fn func(T) (K, V)) map[K]V {
 
 // Keys extracts all keys to a slice.
 func Keys[K comparable, V any](m map[K]V) []K {
-	var ret []K
+	ret := make([]K, 0, len(m))
 	for k := range m {
 		ret = append(ret, k)
 	}
@@ -32,7 +32,7 @@ func Keys[K comparable, V any](m map[K]V) []K {
 
 // Values extracts all values to a slice.
 func Values[K comparable, V any](m map[K]V) []V {
-	var ret []V
+	ret := make([]V, 0, len(m))
 	for _, v := range m {
 		ret = append(ret, v)
 	}
@@ -62,7 +62,7 @@ func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]
 
 // MapValues extracts all transformed values to a slice.
 func MapValues[K comparable, V, T any](m map[K]V, fn func(V) T) []T {
-	var ret []T
+	ret := make([]T, 0, len(m))
 	for _, v := range m {
 		ret = append(ret, fn(v))
 	}
