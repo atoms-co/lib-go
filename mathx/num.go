@@ -40,3 +40,10 @@ func Max[T constraints.Ordered](a, b T) T {
 func CeilDivInt(a, b int) int {
 	return (a-1)/b + 1
 }
+
+func IsPowerOf2(a int) bool {
+	if a <= 0 {
+		return false
+	}
+	return a&(a-1) == 0
+}
