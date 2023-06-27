@@ -9,19 +9,19 @@ import (
 
 func TestRetainBits(t *testing.T) {
 	u := uuidx.RetainBits(uuid.MustParse("dc9076e9-2fda-4019-bd2c-900a8284b9c4"), 4)
-	requirex.Equal(t, u.String(), "d0000000-0000-0000-0000-000000000000")
+	requirex.Equal(t, u.String(), "d0000000-0000-4000-8000-000000000000")
 
 	u = uuidx.RetainBits(uuid.MustParse("ffffffff-ffff-ffff-ffff-ffffffffffff"), 4)
-	requirex.Equal(t, u.String(), "f0000000-0000-0000-0000-000000000000")
+	requirex.Equal(t, u.String(), "f0000000-0000-4000-8000-000000000000")
 
 	u = uuidx.RetainBits(uuid.MustParse("00000000-0000-0000-0000-000000000000"), 4)
-	requirex.Equal(t, u.String(), "00000000-0000-0000-0000-000000000000")
+	requirex.Equal(t, u.String(), "00000000-0000-4000-8000-000000000000")
 
 	u = uuidx.RetainBits(uuid.MustParse("dc9076e9-2fda-4019-bd2c-900a8284b9c4"), 8)
-	requirex.Equal(t, u.String(), "dc000000-0000-0000-0000-000000000000")
+	requirex.Equal(t, u.String(), "dc000000-0000-4000-8000-000000000000")
 
 	u = uuidx.RetainBits(uuid.MustParse("dc9076e9-2fda-4019-bd2c-900a8284b9c4"), 12)
-	requirex.Equal(t, u.String(), "dc900000-0000-0000-0000-000000000000")
+	requirex.Equal(t, u.String(), "dc900000-0000-4000-8000-000000000000")
 }
 
 func TestHash(t *testing.T) {
