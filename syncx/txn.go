@@ -26,9 +26,8 @@ func Txn1[T any](ctx context.Context, txn TxnFn, fn func() (T, error)) (T, error
 	var ret T
 	var err error
 
-	err = txn(ctx, func() error {
+	Txn0(ctx, txn, func() {
 		ret, err = fn()
-		return err
 	})
 	return ret, err
 }
