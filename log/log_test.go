@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"go.atoms.co/lib/log"
+	log_testing "go.atoms.co/lib/log/testing"
 )
 
 // TestNonFatal validates that non-fatal user-facing logging functions call the backend as expected.
 func TestNonFatal(t *testing.T) {
 	ctx := context.Background()
-	rec := recorder{}
+	rec := log_testing.TestRecorder{}
 	log.SetLogger(&rec)
 
 	tests := []struct {
@@ -43,8 +44,8 @@ func TestNonFatal(t *testing.T) {
 		if len(calls) != 1 || flushes > 0 {
 			t.Fatalf("log.%v invoked the log backend incorrectly: (%v Log, %v Flush), want (1,0)", test.name, len(calls), flushes)
 		}
-		if calls[0].sev != test.sev || calls[0].msg != test.msg {
-			t.Errorf("log.%v invoked Log with (%v, %v), want (%v, %v)", test.name, calls[0].sev, calls[0].msg, test.sev, test.msg)
+		if calls[0].Sev != test.sev || calls[0].Msg != test.msg {
+			t.Errorf("log.%v invoked Log with (%v, %v), want (%v, %v)", test.name, calls[0].Sev, calls[0].Msg, test.sev, test.msg)
 		}
 	}
 }
@@ -52,7 +53,7 @@ func TestNonFatal(t *testing.T) {
 // TestFatal validates that the Fatal user-facing logging functions call the backend as expected and then panics.
 func TestFatal(t *testing.T) {
 	ctx := context.Background()
-	rec := recorder{}
+	rec := log_testing.TestRecorder{}
 	log.SetLogger(&rec)
 
 	tests := []struct {
@@ -75,8 +76,8 @@ func TestFatal(t *testing.T) {
 		if len(calls) != 1 || flushes != 1 {
 			t.Fatalf("log.%v invoked the log backend incorrectly: (%v Log, %v Flush), want (1,1)", test.name, len(calls), flushes)
 		}
-		if calls[0].msg != test.msg || msg != test.msg {
-			t.Errorf("log.%v invoked Log/panic with message %v/%v, want %v", test.name, calls[0].msg, msg, test.msg)
+		if calls[0].Msg != test.msg || msg != test.msg {
+			t.Errorf("log.%v invoked Log/panic with message %v/%v, want %v", test.name, calls[0].Msg, msg, test.msg)
 		}
 	}
 }
@@ -91,32 +92,4 @@ func invokeAndRecover(fn func()) (msg string, panicked bool) {
 
 	fn()
 	return "", false
-}
-
-type call struct {
-	sev       log.Severity
-	calldepth int
-	msg       string
-}
-
-// recorder is a simple test Logger that records the invocations.
-type recorder struct {
-	calls   []call
-	flushes int
-}
-
-func (l *recorder) Log(ctx context.Context, sev log.Severity, calldepth int, msg string) {
-	l.calls = append(l.calls, call{sev: sev, calldepth: calldepth, msg: msg})
-}
-
-func (l *recorder) Flush(ctx context.Context) error {
-	l.flushes++
-	return nil
-}
-
-func (l *recorder) Reset() ([]call, int) {
-	calls, flushes := l.calls, l.flushes
-	l.calls = nil
-	l.flushes = 0
-	return calls, flushes
 }
