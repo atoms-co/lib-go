@@ -139,3 +139,17 @@ func FilterKeys[K comparable, V any](m map[K]V, fn func(K) bool) map[K]V {
 	}
 	return ret
 }
+
+// Equals returns true if both maps contain the same elements
+func Equals[K comparable, V comparable](left map[K]V, right map[K]V) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for k, l := range left {
+		r, ok := right[k]
+		if !ok || l != r {
+			return false
+		}
+	}
+	return true
+}
