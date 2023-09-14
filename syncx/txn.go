@@ -31,3 +31,15 @@ func Txn1[T any](ctx context.Context, txn TxnFn, fn func() (T, error)) (T, error
 	})
 	return ret, err
 }
+
+// Txn2 is a convenience wrapper for txn with 2 return values of type T1 and T2.
+func Txn2[T1, T2 any](ctx context.Context, txn TxnFn, fn func() (T1, T2, error)) (T1, T2, error) {
+	var ret1 T1
+	var ret2 T2
+	var err error
+
+	Txn0(ctx, txn, func() {
+		ret1, ret2, err = fn()
+	})
+	return ret1, ret2, err
+}
