@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"go.cloudkitchens.org/lib/statshandlerx"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/runmetrics"
 	"go.opencensus.io/stats/view"
-	"google.golang.org/grpc"
 )
 
 type Distribution int
@@ -19,6 +17,7 @@ const (
 	Exponential Distribution = iota
 	Uniform
 	UserDefined
+	version = "1.0.0"
 )
 
 // Name is the name of the metric.
@@ -135,14 +134,10 @@ func NewSingleViewCounter(name Name, description string, tagKeys ...Key) Counter
 	return newSingleViewCounter(name, description, tagKeys)
 }
 
-// WithGrpcStatsHandler sets up the grpc stats handler.
-func WithGrpcStatsHandler() grpc.ServerOption {
-	return grpc.StatsHandler(&statshandlerx.ServerHandler{})
-}
-
 func Init(appName string) error {
 	// set the default app value for all metrics.
 	initAppName(appName)
+
 
 	err := view.Register(ocgrpc.DefaultServerViews...)
 	if err != nil {
