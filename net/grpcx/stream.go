@@ -3,6 +3,7 @@ package grpcx
 import (
 	"context"
 	"go.atoms.co/lib/log"
+	"go.atoms.co/lib/chanx"
 	"go.atoms.co/lib/contextx"
 	"go.atoms.co/lib/iox"
 	"google.golang.org/grpc"
@@ -15,7 +16,7 @@ const (
 
 // Handler is a low-level bidirectional protobuf message handler. Connection closure is realized as a chan closure
 // in either direction. The hander _may_ consume input before determining whether to accept, but some side must
-// obviously take the initiative.
+// obviously take the initiative. The handler must close the output chan.
 type Handler[A, B any] func(ctx context.Context, in <-chan A) (<-chan B, error)
 
 // Stream is the high-level grpcx streaming interface, which matches the generated types for streaming methods.
@@ -57,29 +58,25 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 		}
 	}()
 
+	// Run server function and ensure all messages are emitted, unless there is a failure.
+
 	out, err := fn(wctx, in)
 	if err != nil {
 		return err
 	}
 
-	for {
-		select {
-		case msg, ok := <-out:
-			if !ok {
-				return nil
+	for msg := range out {
+		if err := server.Send(msg); err != nil {
+			if quit.IsClosed() {
+				break
 			}
-
-			if err := server.Send(msg); err != nil {
-				if quit.IsClosed() {
-					return nil
-				}
-				log.Warnf(ctx, "Send failed: %v", err)
-				return nil
-			}
-		case <-quit.Closed():
-			return nil
+			log.Warnf(ctx, "Send failed: %v", err)
+			break
 		}
 	}
+
+	go chanx.Drain(out)
+	return nil
 }
 
 // Connect connects the client handler to a compatible grpc streaming service method. Stopped by context
@@ -105,43 +102,38 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 	go func() {
 		defer quit.Close()
 
-		for {
-			select {
-			case msg, ok := <-out:
-				if !ok {
+		for !quit.IsClosed() {
+			msg, err := client.Recv()
+			if err != nil {
+				if quit.IsClosed() {
 					return
 				}
+				log.Warnf(ctx, "Recv failed: %v", err)
+				return
+			}
 
-				if err := client.Send(msg); err != nil {
-					if quit.IsClosed() {
-						return
-					}
-					log.Warnf(ctx, "Send failed: %v", err)
-					return
-				}
+			select {
+			case in <- msg:
+				// ok
 			case <-quit.Closed():
 				return
 			}
 		}
 	}()
 
-	for !quit.IsClosed() {
-		msg, err := client.Recv()
-		if err != nil {
-			if quit.IsClosed() {
-				return nil
-			}
-			log.Warnf(ctx, "Recv failed: %v", err)
-			return nil
-		}
+	// Run client function and ensure all messages are emitted, unless there is a failure.
 
-		select {
-		case in <- msg:
-			// ok
-		case <-quit.Closed():
-			return nil
+	for msg := range out {
+		if err := client.Send(msg); err != nil {
+			if quit.IsClosed() {
+				break
+			}
+			log.Warnf(ctx, "Send failed: %v", err)
+			break
 		}
 	}
+
+	go chanx.Drain(out)
 	return nil
 }
 
@@ -195,6 +187,7 @@ func ShortCircuit[A, B any](ctx context.Context, client Handler[A, B], server Ha
 	b := make(chan B, bufChanSize)
 
 	go func() {
+		defer chanx.Drain(out)
 		defer quit.Close()
 		defer close(b)
 
@@ -224,22 +217,15 @@ func ShortCircuit[A, B any](ctx context.Context, client Handler[A, B], server Ha
 
 	// (3) Forward server -> client message sync to be blocking.
 
-	for {
+	for msg := range in {
 		select {
-		case msg, ok := <-in:
-			if !ok {
-				return nil
-			}
-
-			select {
-			case a <- msg:
-				// ok
-			case <-quit.Closed():
-				return nil
-			}
-
+		case a <- msg:
+			// ok
 		case <-quit.Closed():
-			return nil
+			break
 		}
 	}
+
+	go chanx.Drain(in)
+	return nil
 }

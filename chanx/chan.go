@@ -3,6 +3,7 @@ package chanx
 
 import (
 	"go.atoms.co/lib/mathx"
+	"go.atoms.co/slicex"
 	"sync"
 	"time"
 )
@@ -39,6 +40,30 @@ func Append[T any](list []T, in <-chan T) <-chan T {
 		}
 	}()
 	return ret
+}
+
+// AppendLast injects the given set of messages after the input chan messages. The returned chan is closed
+// when the input is closed and the trailing messages are processed.
+func AppendLast[T any](in <-chan T, list ...T) <-chan T {
+	cp := slicex.Clone(list)
+
+	ret := make(chan T)
+	go func() {
+		defer close(ret)
+
+		for elm := range in {
+			ret <- elm
+		}
+		for _, elm := range cp {
+			ret <- elm
+		}
+	}()
+	return ret
+}
+
+// Envelope adds a single header and trailer to a stream. Convenience function.
+func Envelope[T any](header T, in <-chan T, trailer T) <-chan T {
+	return Append([]T{header}, AppendLast(in, trailer))
 }
 
 // Map transforms each element of the chan async. The returned chan is closed when the input is closed.
@@ -83,20 +108,26 @@ func MapAppend[T, U any](list []U, in <-chan T, fn func(t T) U) <-chan U {
 	return ret
 }
 
-// Join combines each element of the chans async. The returned chan is closed when either input is closed.
-func Join[T any](in1 <-chan T, in2 <-chan T) chan T {
-	ret := make(chan T, mathx.MaxInt(len(in1), len(in2)))
+// Join combines the elements of the input chans async. The returned chan is closed after the inputs are closed.
+func Join[T any](in1, in2 <-chan T) <-chan T {
+	ret := make(chan T)
 	go func() {
 		defer close(ret)
 		for {
 			select {
 			case m, ok := <-in1:
 				if !ok {
+					for m := range in2 {
+						ret <- m
+					}
 					return
 				}
 				ret <- m
 			case m, ok := <-in2:
 				if !ok {
+					for m := range in1 {
+						ret <- m
+					}
 					return
 				}
 				ret <- m
