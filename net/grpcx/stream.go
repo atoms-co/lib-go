@@ -91,15 +91,15 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 		return err
 	}
 
-	in := make(chan A, bufChanSize)
-	defer close(in)
+	in := make(chan A)
 
-	out, err := fn(wctx, in)
+	out, err := fn(wctx, chanx.Breaker(in, quit, bufChanSize))
 	if err != nil {
 		return err
 	}
 
 	go func() {
+		defer close(in)
 		defer quit.Close()
 
 		for !quit.IsClosed() {
@@ -121,7 +121,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 		}
 	}()
 
-	// Run client function and ensure all messages are emitted, unless there is a failure.
+	// Ensure all messages are emitted to the client, unless there is a failure.
 
 	for msg := range out {
 		if err := client.Send(msg); err != nil {
@@ -184,33 +184,7 @@ func ShortCircuit[A, B any](ctx context.Context, client Handler[A, B], server Ha
 	// (2) Create buffer for server and connect. Fill buffer async to let the server peek at messages before
 	// accepting the connection -- this assumes the client sends messages first. Otherwise, reverse the roles.
 
-	b := make(chan B, bufChanSize)
-
-	go func() {
-		defer chanx.Drain(out)
-		defer quit.Close()
-		defer close(b)
-
-		for {
-			select {
-			case msg, ok := <-out:
-				if !ok {
-					return
-				}
-
-				select {
-				case b <- msg:
-					// ok
-				case <-quit.Closed():
-					return
-				}
-			case <-quit.Closed():
-				return
-			}
-		}
-	}()
-
-	in, err := server(ctx, b)
+	in, err := server(ctx, chanx.Breaker(out, quit, bufChanSize))
 	if err != nil {
 		return err
 	}

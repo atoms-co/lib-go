@@ -1,7 +1,10 @@
 package chanx_test
 
 import (
+	"go.cloudkitchens.org/lib/testing/assertx"
 	"go.cloudkitchens.org/lib/chanx"
+	"go.cloudkitchens.org/lib/iox"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -43,5 +46,47 @@ func TestDrain(t *testing.T) {
 		chanx.Drain(ch)
 
 		require.Empty(t, ch)
+	})
+}
+
+func TestBreaker(t *testing.T) {
+	t.Run("chan", func(t *testing.T) {
+
+		ch := make(chan int, 5)
+		ch <- 1
+
+		quit := iox.NewAsyncCloser()
+		out := chanx.Breaker(ch, quit, 5)
+
+		one := assertx.Element(t, out)
+		assertx.Equal(t, one, 1)
+
+		ch <- 2
+
+		two := assertx.Element(t, out)
+		assertx.Equal(t, two, 2)
+
+		close(ch)
+
+		assertx.NoElement(t, out)
+		assert.True(t, quit.IsClosed())
+	})
+
+	t.Run("closer", func(t *testing.T) {
+
+		ch := make(chan int, 5)
+		ch <- 1
+
+		quit := iox.NewAsyncCloser()
+		out := chanx.Breaker(ch, quit, 5)
+
+		one := assertx.Element(t, out)
+		assertx.Equal(t, one, 1)
+
+		quit.Close()
+
+		ch <- 2
+
+		assertx.NoElement(t, out)
 	})
 }
