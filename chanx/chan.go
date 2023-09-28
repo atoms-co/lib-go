@@ -2,6 +2,7 @@
 package chanx
 
 import (
+	"go.atoms.co/lib/iox"
 	"go.atoms.co/lib/mathx"
 	"go.atoms.co/slicex"
 	"sync"
@@ -64,6 +65,48 @@ func AppendLast[T any](in <-chan T, list ...T) <-chan T {
 // Envelope adds a single header and trailer to a stream. Convenience function.
 func Envelope[T any](header T, in <-chan T, trailer T) <-chan T {
 	return Append([]T{header}, AppendLast(in, trailer))
+}
+
+// Breaker is a cancellable, buffered forwarder. It bidirectionally ties chan closure to the given async
+// closer: if the chan is closed, the closer is closed; and if the closer is closed, the returned chan
+// is closed and the input chan is drained.
+func Breaker[T any](in <-chan T, closer iox.AsyncCloser, size int) <-chan T {
+	buf := make(chan T, size)
+
+	go func() {
+		defer Drain(in)
+		defer close(buf)
+		defer closer.Close()
+
+		for !closer.IsClosed() {
+			select {
+			case msg, ok := <-in:
+				if !ok {
+					return
+				}
+
+				// Delay checking for closure, if there is room in the buffer. That ensures all
+				// messages in an unbuffered input chan are forwarded.
+
+				select {
+				case buf <- msg:
+					// ok
+				default:
+					select {
+					case buf <- msg:
+						// ok
+					case <-closer.Closed():
+						return
+					}
+				}
+			case <-closer.Closed():
+				return
+			}
+		}
+
+	}()
+
+	return buf
 }
 
 // Map transforms each element of the chan async. The returned chan is closed when the input is closed.
