@@ -6,6 +6,7 @@ import (
 	"go.atoms.co/lib/chanx"
 	"go.atoms.co/lib/contextx"
 	"go.atoms.co/lib/iox"
+	"go.uber.org/atomic"
 	"google.golang.org/grpc"
 )
 
@@ -67,7 +68,7 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 
 	for msg := range out {
 		if err := server.Send(msg); err != nil {
-			if quit.IsClosed() {
+			if quit.IsClosed() || contextx.IsCancelled(ctx) {
 				break
 			}
 			log.Warnf(ctx, "Send failed: %v", err)
@@ -98,6 +99,8 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 		return err
 	}
 
+	var recvErr atomic.Error
+
 	go func() {
 		defer close(in)
 		defer quit.Close()
@@ -108,7 +111,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 				if quit.IsClosed() {
 					return
 				}
-				log.Warnf(ctx, "Recv failed: %v", err)
+				recvErr.Store(err)
 				return
 			}
 
@@ -125,7 +128,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 
 	for msg := range out {
 		if err := client.Send(msg); err != nil {
-			if quit.IsClosed() {
+			if quit.IsClosed() || contextx.IsCancelled(ctx) {
 				break
 			}
 			log.Warnf(ctx, "Send failed: %v", err)
@@ -134,7 +137,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 	}
 
 	go chanx.Drain(out)
-	return nil
+	return recvErr.Load()
 }
 
 // ConnectNonBlocking returns a connection type T, if the connection is successful. Non-blocking.
