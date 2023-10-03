@@ -43,7 +43,7 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 		for !quit.IsClosed() {
 			msg, err := server.Recv()
 			if err != nil {
-				if quit.IsClosed() {
+				if quit.IsClosed() || contextx.IsCancelled(ctx) {
 					return
 				}
 				log.Warnf(ctx, "Recv failed: %v", err)
