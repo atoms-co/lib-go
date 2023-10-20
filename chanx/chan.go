@@ -28,8 +28,8 @@ func ToList[T any](ch <-chan T) []T {
 	return ret
 }
 
-// Append injects the given set of messages. The returned chan is closed when the input is closed.
-func Append[T any](list []T, in <-chan T) <-chan T {
+// Prepend injects the given set of elements at the beginning of the channel. The returned chan is closed when the input is closed.
+func Prepend[T any](in <-chan T, list ...T) <-chan T {
 	ret := make(chan T, len(list))
 	for _, elm := range list {
 		ret <- elm
@@ -43,9 +43,9 @@ func Append[T any](list []T, in <-chan T) <-chan T {
 	return ret
 }
 
-// AppendLast injects the given set of messages after the input chan messages. The returned chan is closed
-// when the input is closed and the trailing messages are processed.
-func AppendLast[T any](in <-chan T, list ...T) <-chan T {
+// Append injects the given set of messages after the input chan messages. The returned chan is closed
+// when the input is closed and the appended messages are processed.
+func Append[T any](in <-chan T, list ...T) <-chan T {
 	cp := slicex.Clone(list)
 
 	ret := make(chan T)
@@ -64,7 +64,7 @@ func AppendLast[T any](in <-chan T, list ...T) <-chan T {
 
 // Envelope adds a single header and trailer to a stream. Convenience function.
 func Envelope[T any](header T, in <-chan T, trailer T) <-chan T {
-	return Append([]T{header}, AppendLast(in, trailer))
+	return Prepend(Append(in, trailer), header)
 }
 
 // Breaker is a cancellable, buffered forwarder. It bidirectionally ties chan closure to the given async
