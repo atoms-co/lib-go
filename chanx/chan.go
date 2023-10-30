@@ -227,8 +227,23 @@ func TryWrite[T any](ch chan<- T, t T, timeout time.Duration) bool {
 	}
 }
 
-// Drain removes all elements from the channel
+// Drain removes all elements from the channel. Use Clear instead.
 func Drain[T any](ch <-chan T) {
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return
+			}
+		default:
+			return
+		}
+	}
+}
+
+// Clear removes all elements from the channel until it's empty at the time of the last check.
+// Note that if there is a concurrent write to this channel, the channel may not be empty after this method is finished.
+func Clear[T any](ch <-chan T) {
 	for {
 		select {
 		case _, ok := <-ch:
