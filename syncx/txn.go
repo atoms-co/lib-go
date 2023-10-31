@@ -21,17 +21,6 @@ func Txn0(ctx context.Context, txn TxnFn, fn func()) {
 	})
 }
 
-// Txn is a convenience wrapper for txn where we want to return one value of type T.
-// TODO (styurin) 10/27/2023: rename to be consistent with Txn1
-func Txn[T any](ctx context.Context, txn TxnFn, fn func() T) (T, error) {
-	var ret T
-	err := txn(ctx, func() error {
-		ret = fn()
-		return nil
-	})
-	return ret, err
-}
-
 // Txn1 is a convenience wrapper for txn with 1 return value of type T.
 func Txn1[T any](ctx context.Context, txn TxnFn, fn func() (T, error)) (T, error) {
 	var ret T
