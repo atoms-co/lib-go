@@ -13,7 +13,13 @@ func TestDrain(t *testing.T) {
 	t.Run("from empty channel", func(t *testing.T) {
 		ch := make(chan int)
 
-		chanx.Drain(ch)
+		wait := iox.NewAsyncCloser()
+		go func() {
+			chanx.Drain(ch)
+			wait.Close()
+		}()
+		close(ch)
+		<-wait.Closed()
 
 		require.Empty(t, ch)
 	})
@@ -32,7 +38,13 @@ func TestDrain(t *testing.T) {
 		ch <- 1
 		ch <- 2
 
-		chanx.Drain(ch)
+		wait := iox.NewAsyncCloser()
+		go func() {
+			chanx.Drain(ch)
+			wait.Close()
+		}()
+		close(ch)
+		<-wait.Closed()
 
 		require.Empty(t, ch)
 	})
