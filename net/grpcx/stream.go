@@ -160,6 +160,8 @@ func ConnectNonBlocking[T, A, B any, S Stream[A, B]](ctx context.Context, con fu
 
 		if !wait.IsClosed() {
 			err = err2 // propagate err: we did not get to handler call
+		} else if err2 != nil {
+			log.Warnf(ctx, "Stream failed after connecting: %v", err2)
 		}
 	}()
 
