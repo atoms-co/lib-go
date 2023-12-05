@@ -1,10 +1,12 @@
 package assertx
 
 import (
-	"go.cloudkitchens.org/lib/chanx"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"go.cloudkitchens.org/lib/chanx"
 )
 
 const (
@@ -26,6 +28,14 @@ func NoElement[T any](t *testing.T, ch <-chan T, args ...any) {
 
 	elm, ok := chanx.TryRead(ch, chanWait)
 	assert.False(t, ok, append([]any{"unexpected chan element: ", elm}, args...))
+}
+
+// Closed requires a channel to be closed within a grace period
+func Closed[T any](t *testing.T, ch <-chan T, args ...any) {
+	t.Helper()
+
+	ok := chanx.TryDrain(ch, chanWait)
+	assert.True(t, ok, append([]any{"channel not closed:"}, args...))
 }
 
 // Drain returns all elements of the given channel until no element appear in a grace period.

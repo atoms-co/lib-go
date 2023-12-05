@@ -2,11 +2,12 @@
 package chanx
 
 import (
+	"sync"
+	"time"
+
 	"go.cloudkitchens.org/lib/iox"
 	"go.cloudkitchens.org/lib/mathx"
 	"go.cloudkitchens.org/lib/slicex"
-	"sync"
-	"time"
 )
 
 // NewFixed returns a new closed chan with the given elements.
@@ -224,6 +225,23 @@ func TryWrite[T any](ch chan<- T, t T, timeout time.Duration) bool {
 		return true
 	case <-timer.C:
 		return false
+	}
+}
+
+// TryDrain reads, waiting up to the given timeout, Returns true if channel close indicator is return, false otherwise.
+func TryDrain[T any](ch <-chan T, timeout time.Duration) bool {
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return true
+			}
+		case <-timer.C:
+			return false
+		}
 	}
 }
 
