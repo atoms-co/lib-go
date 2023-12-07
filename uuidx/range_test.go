@@ -140,6 +140,22 @@ func TestShards(t *testing.T) {
 			prev = r
 		}
 	}
+
+	// This test is an example of splitting a full range of UUID by number of shards that is not power of 2.
+	// Such splitting is correct, but can introduce unnecessary complications when used by humans. For example,
+	// given a UUID close to the range border, it would be harder for a person to figure out which range it belongs to
+	// (e.g. try to determine whether `071c71c7-1c71-c71c-71c7-1c17c71c71c7` is in the first range or second for
+	// 36 shards vs. `081c71c7-1c71-c71c-71c7-1c71c71c71c7` for 32).
+	t.Run("split by not power of 2", func(t *testing.T) {
+		s, _ := uuidx.NewRange(uuidx.Min, uuidx.Max)
+		ranges, _ := uuidx.Split(s, 36)
+		assert.Equal(t, ranges[0].From(), uuidx.Min)
+		assert.Equal(t, ranges[0].To().String(), "071c71c7-1c71-c71c-71c7-1c71c71c71c7")
+
+		ranges, _ = uuidx.Split(s, 32)
+		assert.Equal(t, ranges[0].From(), uuidx.Min)
+		assert.Equal(t, ranges[0].To().String(), "08000000-0000-0000-0000-000000000000")
+	})
 }
 
 func TestIntersect(t *testing.T) {
