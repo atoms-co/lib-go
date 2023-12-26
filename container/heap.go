@@ -1,6 +1,9 @@
 package container
 
-import "container/heap"
+import (
+	"container/heap"
+	"go.atoms.co/slicex"
+)
 
 type heapStore[T any] struct {
 	data []T
@@ -67,4 +70,13 @@ func (h *Heap[T]) Peek() T {
 
 func (h *Heap[T]) Len() int {
 	return h.store.Len()
+}
+
+// Remove removes the element satisfying the predicate.
+func (h *Heap[T]) Remove(fn func(x T) bool) bool {
+	idx, ok := slicex.FirstIndex(h.store.data, fn)
+	if ok {
+		heap.Remove(h.store, idx)
+	}
+	return ok
 }
