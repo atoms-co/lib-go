@@ -60,6 +60,45 @@ func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]
 	return ret
 }
 
+// TryMap extracts all transformed keys and values to a map.
+func TryMap[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1, error)) (map[K1]V1, error) {
+	ret := make(map[K1]V1)
+	for k, v := range m {
+		k1, v1, err := fn(k, v)
+		if err != nil {
+			return nil, err
+		}
+		ret[k1] = v1
+	}
+	return ret, nil
+}
+
+// MapIf extracts all transformed keys and values to a map, if they satisfy a given predicate
+func MapIf[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1, bool)) map[K1]V1 {
+	ret := make(map[K1]V1)
+	for k, v := range m {
+		if k1, v1, ok := fn(k, v); ok {
+			ret[k1] = v1
+		}
+	}
+	return ret
+}
+
+// TryMapIf extracts all transformed keys and values to a map, if they satisfy a given predicate
+func TryMapIf[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1, bool, error)) (map[K1]V1, error) {
+	ret := make(map[K1]V1)
+	for k, v := range m {
+		k1, v1, ok, err := fn(k, v)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			ret[k1] = v1
+		}
+	}
+	return ret, nil
+}
+
 // MapValues extracts all transformed values to a slice.
 func MapValues[K comparable, V, T any](m map[K]V, fn func(V) T) []T {
 	ret := make([]T, 0, len(m))

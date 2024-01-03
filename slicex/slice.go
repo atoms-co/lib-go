@@ -159,3 +159,16 @@ func Equal[T comparable](list1, list2 []T) bool {
 	}
 	return true
 }
+
+// EqualFunc determines if two lists are equal matching a specific element predicate
+func EqualFunc[T any](list1, list2 []T, equal func(T, T) bool) bool {
+	if len(list1) != len(list2) {
+		return false
+	}
+	for i := range list1 {
+		if !equal(list1[i], list2[i]) {
+			return false
+		}
+	}
+	return true
+}
