@@ -2,6 +2,7 @@ package container
 
 import (
 	"container/heap"
+
 	"go.cloudkitchens.org/lib/slicex"
 )
 
@@ -79,4 +80,9 @@ func (h *Heap[T]) Remove(fn func(x T) bool) bool {
 		heap.Remove(h.store, idx)
 	}
 	return ok
+}
+
+// Elements return a list of elements stored in the heap
+func (h *Heap[T]) Elements() []T {
+	return slicex.New(h.store.data...)
 }
