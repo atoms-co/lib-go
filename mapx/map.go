@@ -192,3 +192,18 @@ func Equals[K comparable, V comparable](left map[K]V, right map[K]V) bool {
 	}
 	return true
 }
+
+// Merge combines multiple maps into a single map. Values with identical keys are overridden by the last one.
+func Merge[K comparable, V any](maps ...map[K]V) map[K]V {
+	sz := 0
+	for _, m := range maps {
+		sz += len(m)
+	}
+	rt := make(map[K]V, sz)
+	for _, m := range maps {
+		for k, v := range m {
+			rt[k] = v
+		}
+	}
+	return rt
+}

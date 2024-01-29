@@ -1,9 +1,12 @@
 package mapx_test
 
 import (
-	"go.cloudkitchens.org/lib/mapx"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"go.cloudkitchens.org/lib/testing/requirex"
+	"go.cloudkitchens.org/lib/mapx"
 )
 
 func TestEquals(t *testing.T) {
@@ -25,5 +28,22 @@ func TestEquals(t *testing.T) {
 
 	t.Run("not equal elements", func(t *testing.T) {
 		require.False(t, mapx.Equals(map[int]int{1: 2, 2: 1}, map[int]int{2: 2, 1: 1}))
+	})
+}
+
+func TestMerge(t *testing.T) {
+	t.Run("merge", func(t *testing.T) {
+		m1 := map[int]int{1: 1, 2: 2}
+		m2 := map[int]int{1: 3, 3: 3}
+
+		m := mapx.Merge(m1, m2)
+		requirex.Equal(t, m, map[int]int{1: 3, 2: 2, 3: 3})
+		requirex.Equal(t, m1, map[int]int{1: 1, 2: 2})
+		requirex.Equal(t, m2, map[int]int{1: 3, 3: 3})
+
+		m = mapx.Merge(m2, m1)
+		requirex.Equal(t, m, map[int]int{1: 1, 2: 2, 3: 3})
+		requirex.Equal(t, m1, map[int]int{1: 1, 2: 2})
+		requirex.Equal(t, m2, map[int]int{1: 3, 3: 3})
 	})
 }
