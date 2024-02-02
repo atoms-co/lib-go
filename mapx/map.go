@@ -152,7 +152,7 @@ func Flatten[K comparable, V any](m map[K][]V) []V {
 
 // Clone makes a copy of the map (with value copy of keys and values).
 func Clone[K comparable, V any](m map[K]V) map[K]V {
-	ret := map[K]V{}
+	ret := make(map[K]V, len(m))
 	for k, v := range m {
 		ret[k] = v
 	}
