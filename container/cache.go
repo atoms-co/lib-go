@@ -3,6 +3,8 @@ package container
 import (
 	"fmt"
 	"time"
+
+	"go.atoms.co/lib/mapx"
 )
 
 // node is a doubly-linked cache node. Next is newer.
@@ -121,6 +123,11 @@ func (c *Cache[K, V]) Trim(now time.Time) {
 		}
 		c.Remove(head.key)
 	}
+}
+
+// Compact reallocates the internal maps due to potentially high turnover leaking memory. Called infrequently.
+func (c *Cache[K, V]) Compact() {
+	c.elements = mapx.Clone(c.elements)
 }
 
 func (c *Cache[K, V]) String() string {
