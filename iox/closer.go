@@ -10,9 +10,7 @@ import (
 // AsyncCloser is an async closer that supports a quit chan as a close notification mechanism. Thread-safe.
 type AsyncCloser interface {
 	RAsyncCloser
-
-	// Close closes the instance. No error is returned as it is usually called in a defer.
-	Close()
+	WAsyncCloser
 }
 
 // RAsyncCloser is an async closer that supports a read-only quit chan as a close notification mechanism. Thread-safe.
@@ -21,6 +19,12 @@ type RAsyncCloser interface {
 	IsClosed() bool
 	// Closed returns a quit chan that is closed iff the instance is closed.
 	Closed() <-chan struct{}
+}
+
+// WAsyncCloser is an async closer that supports a quit chan as a close mechanism. Thread-safe.
+type WAsyncCloser interface {
+	// Close closes the instance. No error is returned as it is usually called in a defer.
+	Close()
 }
 
 type asyncCloser struct {
