@@ -2,17 +2,24 @@ package grpcx
 
 import (
 	"context"
+	"time"
+
+	"go.uber.org/atomic"
+	"google.golang.org/grpc"
+
 	"go.cloudkitchens.org/lib/log"
 	"go.cloudkitchens.org/lib/chanx"
 	"go.cloudkitchens.org/lib/contextx"
 	"go.cloudkitchens.org/lib/iox"
-	"go.uber.org/atomic"
-	"google.golang.org/grpc"
 )
 
 const (
 	// bufChanSize is the interal buffer size for streaming handler utilities.
 	bufChanSize = 20
+	// contextCancelDelay is the delay on cancelling the gRPC context when a user initiates a cancel.
+	// This gives time for messages to flush properly.
+	// TODO(jhhurwitz): 12/21/24 A more elegant solution to this problem
+	contextCancelDelay = 100 * time.Millisecond
 )
 
 // Handler is a low-level bidirectional protobuf message handler. Connection closure is realized as a chan closure
@@ -27,9 +34,11 @@ type Stream[A, B any] interface {
 }
 
 // Receive is a server handler for the given stream. The context must be the server context. Blocking.
-func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler[A, B]) error {
-	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())      // ctx closed => quit
-	wctx, _ := contextx.WithQuitCancel(ctx, quit.Closed()) // quit -> wctx closed
+func Receive[A, B any, S Stream[A, B]](octx context.Context, server S, fn Handler[A, B]) error {
+	ctx, _ := contextx.WithQuitCancelDelay(context.Background(), octx.Done(), contextCancelDelay)
+
+	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())                               // ctx closed => quit
+	wctx, _ := contextx.WithQuitCancelDelay(ctx, quit.Closed(), contextCancelDelay) // quit -> wctx closed
 	defer quit.Close()
 
 	// Start reading async first to allow the server to see any registration messages.
@@ -46,7 +55,6 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 				if quit.IsClosed() || contextx.IsCancelled(ctx) {
 					return
 				}
-				log.Warnf(ctx, "Recv failed: %v", err)
 				return
 			}
 
@@ -82,9 +90,11 @@ func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler
 
 // Connect connects the client handler to a compatible grpc streaming service method. Stopped by context
 // cancellation or either side. Blocking.
-func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Context, ...grpc.CallOption) (S, error), fn Handler[A, B], opts ...grpc.CallOption) error {
-	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())      // ctx closed => quit
-	wctx, _ := contextx.WithQuitCancel(ctx, quit.Closed()) // quit -> wctx closed
+func Connect[A, B any, S Stream[A, B]](octx context.Context, con func(context.Context, ...grpc.CallOption) (S, error), fn Handler[A, B], opts ...grpc.CallOption) error {
+	ctx, _ := contextx.WithQuitCancelDelay(context.Background(), octx.Done(), contextCancelDelay)
+
+	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())                               // ctx closed => quit
+	wctx, _ := contextx.WithQuitCancelDelay(ctx, quit.Closed(), contextCancelDelay) // quit -> wctx closed
 	defer quit.Close()
 
 	client, err := con(wctx, opts...)
@@ -103,7 +113,6 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 
 	go func() {
 		defer close(in)
-		defer quit.Close()
 
 		for !quit.IsClosed() {
 			msg, err := client.Recv()
@@ -112,6 +121,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 					return
 				}
 				recvErr.Store(err)
+
 				return
 			}
 
@@ -172,7 +182,10 @@ func ConnectNonBlocking[T, A, B any, S Stream[A, B]](ctx context.Context, con fu
 
 // ShortCircuit connects two handlers directly, without any grpc server. The client is assumed to initiate the
 // exchange. Stopped by context cancellation or any of the handlers. Blocking.
-func ShortCircuit[A, B any](ctx context.Context, client Handler[A, B], server Handler[B, A]) error {
+func ShortCircuit[A, B any](octx context.Context, client Handler[A, B], server Handler[B, A]) error {
+	ctx, cancel := contextx.WithQuitCancelDelay(context.Background(), octx.Done(), contextCancelDelay)
+	defer cancel()
+
 	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())
 	defer quit.Close()
 

@@ -101,10 +101,26 @@ func Breaker[T any](in <-chan T, closer iox.AsyncCloser, size int) <-chan T {
 					}
 				}
 			case <-closer.Closed():
-				return
+				break
 			}
 		}
 
+		// Flush input to buffer on closure (best-effort)
+		for {
+			select {
+			case msg, ok := <-in:
+				if !ok {
+					return
+				}
+				select {
+				case buf <- msg:
+				default:
+					return
+				}
+			default:
+				return
+			}
+		}
 	}()
 
 	return buf
