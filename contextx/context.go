@@ -32,6 +32,23 @@ func WithQuitCancel(ctx context.Context, quit <-chan struct{}) (context.Context,
 	return wctx, cancel
 }
 
+// WithQuitCancelDelay returns a cancellable context with a delay.
+// Additionally, if the quit channel is closed the context is cancelled.
+func WithQuitCancelDelay(ctx context.Context, quit <-chan struct{}, delay time.Duration) (context.Context, context.CancelFunc) {
+	wctx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		select {
+		case <-quit:
+			time.AfterFunc(delay, cancel)
+		case <-wctx.Done():
+			// ok: caller cancelled the context
+		}
+	}()
+
+	return wctx, cancel
+}
+
 // WithQuitTimeout returns a cancellable context that times out. Additionally, if the quit channel is closed the
 // context is cancelled.
 func WithQuitTimeout(ctx context.Context, quit <-chan struct{}, timeout time.Duration) (context.Context, context.CancelFunc) {

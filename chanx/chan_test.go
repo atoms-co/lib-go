@@ -1,12 +1,14 @@
 package chanx_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"go.atoms.co/lib/testing/assertx"
 	"go.atoms.co/lib/chanx"
 	"go.atoms.co/lib/iox"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestDrain(t *testing.T) {
@@ -126,11 +128,11 @@ func TestBreaker(t *testing.T) {
 
 	t.Run("closer", func(t *testing.T) {
 
-		ch := make(chan int, 5)
+		ch := make(chan int, 2)
 		ch <- 1
 
 		quit := iox.NewAsyncCloser()
-		out := chanx.Breaker(ch, quit, 5)
+		out := chanx.Breaker(ch, quit, 2)
 
 		one := assertx.Element(t, out)
 		assertx.Equal(t, one, 1)
@@ -138,7 +140,15 @@ func TestBreaker(t *testing.T) {
 		quit.Close()
 
 		ch <- 2
+		ch <- 3
+		ch <- 4
 
-		assertx.NoElement(t, out)
+		two := assertx.Element(t, out)
+		assertx.Equal(t, two, 2)
+
+		three := assertx.Element(t, out)
+		assertx.Equal(t, three, 3)
+
+		assertx.NoElement(t, out) // No room in buffer for 4
 	})
 }
