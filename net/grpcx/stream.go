@@ -34,11 +34,9 @@ type Stream[A, B any] interface {
 }
 
 // Receive is a server handler for the given stream. The context must be the server context. Blocking.
-func Receive[A, B any, S Stream[A, B]](octx context.Context, server S, fn Handler[A, B]) error {
-	ctx, _ := contextx.WithQuitCancelDelay(context.Background(), octx.Done(), contextCancelDelay)
-
-	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())                               // ctx closed => quit
-	wctx, _ := contextx.WithQuitCancelDelay(ctx, quit.Closed(), contextCancelDelay) // quit -> wctx closed
+func Receive[A, B any, S Stream[A, B]](ctx context.Context, server S, fn Handler[A, B]) error {
+	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())      // ctx closed => quit
+	wctx, _ := contextx.WithQuitCancel(ctx, quit.Closed()) // quit -> wctx closed
 	defer quit.Close()
 
 	// Start reading async first to allow the server to see any registration messages.
@@ -90,11 +88,9 @@ func Receive[A, B any, S Stream[A, B]](octx context.Context, server S, fn Handle
 
 // Connect connects the client handler to a compatible grpc streaming service method. Stopped by context
 // cancellation or either side. Blocking.
-func Connect[A, B any, S Stream[A, B]](octx context.Context, con func(context.Context, ...grpc.CallOption) (S, error), fn Handler[A, B], opts ...grpc.CallOption) error {
-	ctx, _ := contextx.WithQuitCancelDelay(context.Background(), octx.Done(), contextCancelDelay)
-
-	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())                               // ctx closed => quit
-	wctx, _ := contextx.WithQuitCancelDelay(ctx, quit.Closed(), contextCancelDelay) // quit -> wctx closed
+func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Context, ...grpc.CallOption) (S, error), fn Handler[A, B], opts ...grpc.CallOption) error {
+	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())      // ctx closed => quit
+	wctx, _ := contextx.WithQuitCancel(ctx, quit.Closed()) // quit -> wctx closed
 	defer quit.Close()
 
 	client, err := con(wctx, opts...)
@@ -182,11 +178,9 @@ func ConnectNonBlocking[T, A, B any, S Stream[A, B]](ctx context.Context, con fu
 
 // ShortCircuit connects two handlers directly, without any grpc server. The client is assumed to initiate the
 // exchange. Stopped by context cancellation or any of the handlers. Blocking.
-func ShortCircuit[A, B any](octx context.Context, client Handler[A, B], server Handler[B, A]) error {
-	ctx, cancel := contextx.WithQuitCancelDelay(context.Background(), octx.Done(), contextCancelDelay)
-	defer cancel()
-
-	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())
+func ShortCircuit[A, B any](ctx context.Context, client Handler[A, B], server Handler[B, A]) error {
+	quit := iox.WithCancel(ctx, iox.NewAsyncCloser())      // ctx closed => quit
+	wctx, _ := contextx.WithQuitCancel(ctx, quit.Closed()) // quit -> wctx closed
 	defer quit.Close()
 
 	// (1) Create buffer for client and connect
@@ -194,7 +188,7 @@ func ShortCircuit[A, B any](octx context.Context, client Handler[A, B], server H
 	a := make(chan A, bufChanSize)
 	defer close(a)
 
-	out, err := client(ctx, a)
+	out, err := client(wctx, a)
 	if err != nil {
 		return err
 	}
@@ -202,7 +196,7 @@ func ShortCircuit[A, B any](octx context.Context, client Handler[A, B], server H
 	// (2) Create buffer for server and connect. Fill buffer async to let the server peek at messages before
 	// accepting the connection -- this assumes the client sends messages first. Otherwise, reverse the roles.
 
-	in, err := server(ctx, chanx.Breaker(out, quit, bufChanSize))
+	in, err := server(wctx, chanx.Breaker(out, quit, bufChanSize))
 	if err != nil {
 		return err
 	}
