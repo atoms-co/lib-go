@@ -4,8 +4,9 @@ package backoffx
 import (
 	"time"
 
-	"go.atoms.co/lib/clock"
 	"github.com/cenkalti/backoff/v4"
+
+	"go.atoms.co/lib/clock"
 )
 
 type BackOff = backoff.BackOff
@@ -63,6 +64,7 @@ func NewLimited(max time.Duration, opts ...Option) BackOff {
 			n = opt.max
 		}
 	}
+	b.Reset()
 
 	if n > 0 {
 		return backoff.WithMaxRetries(b, uint64(n))
