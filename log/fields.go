@@ -66,6 +66,9 @@ const (
 	ErrorType
 	// SkipType indicates that the field is a no-op.
 	SkipType
+	// ReflectType indicates that the field carries an interface{}, which should
+	// be serialized using reflection.
+	ReflectType
 )
 
 var (
@@ -417,4 +420,15 @@ func Err(err error) Field {
 // inputs in other Field constructors.
 func Skip() Field {
 	return Field{Type: SkipType}
+}
+
+// Reflect constructs a field with the given key and an arbitrary object. It uses
+// an encoding-appropriate, reflection-based function to lazily serialize nearly
+// any object into the logging context, but it's relatively slow and
+// allocation-heavy. Outside tests, Any is always a better choice.
+//
+// If encoding fails (e.g., trying to serialize a map[int]string to JSON), Reflect
+// includes the error message in the final log output.
+func Reflect(key string, val interface{}) Field {
+	return Field{Key: key, Type: ReflectType, Interface: val}
 }
