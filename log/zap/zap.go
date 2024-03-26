@@ -4,9 +4,10 @@ package zap
 import (
 	"context"
 
-	"go.cloudkitchens.org/lib/log"
 	z "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"go.cloudkitchens.org/lib/log"
 )
 
 // FieldOption enriches a log message with Zap fields, usually extracted from the context.
@@ -128,6 +129,8 @@ func zapType(logType log.FieldType) zapcore.FieldType {
 		return zapcore.ErrorType
 	case log.SkipType:
 		return zapcore.SkipType
+	case log.ReflectType:
+		return zapcore.ReflectType
 	default:
 		// UnknownType is the default field type. Attempting to add it to an encoder will panic.
 		return zapcore.UnknownType
