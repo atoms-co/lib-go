@@ -16,13 +16,13 @@ const (
 // ChanEmpty verifies that the channel is empty. Fails if the channel is not empty after some time
 func ChanEmpty[T any](t *testing.T, c <-chan T) {
 	t.Helper()
-	require.Eventually(t, func() bool { return len(c) == 0 }, chanWait, 100*time.Millisecond)
+	require.Eventually(t, func() bool { return len(c) == 0 }, chanWait, 10*time.Millisecond)
 }
 
 // ChanNonEmpty verifies that the channel has elements. Fails if the channel is empty after some time
 func ChanNonEmpty[T any](t *testing.T, c <-chan T) {
 	t.Helper()
-	require.Eventually(t, func() bool { return len(c) > 0 }, chanWait, 100*time.Millisecond)
+	require.Eventually(t, func() bool { return len(c) > 0 }, chanWait, 10*time.Millisecond)
 }
 
 // Element requires an element in the given channel within a grace period.
