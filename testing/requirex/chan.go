@@ -36,3 +36,14 @@ func Element[T any](t *testing.T, ch <-chan T, args ...any) T {
 	require.True(t, ok, args...)
 	return elm
 }
+
+// Closed requires a channel to be closed within a grace period
+func Closed[T any](t *testing.T, ch <-chan T, args ...any) {
+	t.Helper()
+
+	ok := chanx.TryDrain(ch, chanWait)
+	if len(args) == 0 {
+		args = []any{"no element in channel"}
+	}
+	require.True(t, ok, args...)
+}
