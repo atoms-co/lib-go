@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 
 	"go.cloudkitchens.org/lib/log"
 )
