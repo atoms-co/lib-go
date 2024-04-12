@@ -3,36 +3,28 @@ package mathx
 
 import "golang.org/x/exp/constraints"
 
-// MinInt returns the smaller of the given numbers.
+// MinInt returns the smallest of the given numbers.
+// Deprecated: use built-in min
 func MinInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+	return min(a, b)
 }
 
-// MaxInt returns the larger of the given numbers.
+// MaxInt returns the largest of the given numbers.
+// Deprecated: use built-in max
 func MaxInt(a, b int) int {
-	if a < b {
-		return b
-	}
-	return a
+	return max(a, b)
 }
 
-// Min returns the smaller of the given numbers.
+// Min returns the smallest of the given numbers.
+// Deprecated: use built-in min
 func Min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
+	return min(a, b)
 }
 
-// Max returns the larger of the given numbers.
+// Max returns the largest of the given numbers.
+// Deprecated: use built-in max
 func Max[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return b
-	}
-	return a
+	return max(a, b)
 }
 
 // CeilDivInt returns the ceiling of a/b, where a and b are positive integers. The positive requirement avoids the

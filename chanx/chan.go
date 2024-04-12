@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.cloudkitchens.org/lib/iox"
-	"go.cloudkitchens.org/lib/mathx"
 	"go.cloudkitchens.org/lib/slicex"
 )
 
@@ -199,7 +198,7 @@ func Join[T any](in1, in2 <-chan T) <-chan T {
 
 // Process processes all elements with the given level of concurrency. Blocking.
 func Process[T any](in <-chan T, n int, fn func(t T)) {
-	n = mathx.MaxInt(1, n)
+	n = max(1, n)
 
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
