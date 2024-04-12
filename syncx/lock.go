@@ -1,9 +1,9 @@
 package syncx
 
 import (
-	"go.atoms.co/lib/iox"
-	"go.atoms.co/lib/mathx"
 	"go.uber.org/atomic"
+
+	"go.atoms.co/lib/iox"
 )
 
 // Lock is a chan-based closeable semaphore with N concurrent locks granted. If N=1, it acts as a mutex.
@@ -17,7 +17,7 @@ type Lock struct {
 }
 
 func NewLock(n int) *Lock {
-	n = mathx.MaxInt(1, n)
+	n = max(1, n)
 	ret := &Lock{
 		AsyncCloser: iox.NewAsyncCloser(),
 		guard:       make(chan bool, n),

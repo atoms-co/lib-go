@@ -2,7 +2,6 @@
 package workqueue
 
 import (
-	"go.atoms.co/lib/mathx"
 	"go.uber.org/atomic"
 )
 
@@ -19,7 +18,7 @@ type WorkQueue struct {
 
 func New(cap, buffer int) *WorkQueue {
 	p := &WorkQueue{
-		pending:   make(chan func(), mathx.MaxInt(0, buffer)),
+		pending:   make(chan func(), max(0, buffer)),
 		completed: make(chan bool),
 		quit:      make(chan struct{}),
 	}
