@@ -4,12 +4,9 @@ package uuidx
 import (
 	"bytes"
 	"fmt"
-	"math"
 	"math/big"
 
 	"github.com/google/uuid"
-
-	"go.cloudkitchens.org/lib/css/slices"
 )
 
 var (
@@ -230,8 +227,8 @@ func Divide(a, b int64) (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("invalid")
 	}
 
-	max := Domain.To()
-	end := big.NewInt(0).Add(big.NewInt(0).SetBytes(max[:]), big.NewInt(1))
+	maxValue := Domain.To()
+	end := big.NewInt(0).Add(big.NewInt(0).SetBytes(maxValue[:]), big.NewInt(1))
 	ret := big.NewInt(0).Div(big.NewInt(0).Mul(end, big.NewInt(a)), big.NewInt(b))
 
 	return uuid.FromBytes(ret.FillBytes(make([]byte, 16)))
@@ -253,78 +250,4 @@ func Inc(n uuid.UUID) uuid.UUID {
 	next := big.NewInt(0).Add(big.NewInt(0).SetBytes(n[:]), big.NewInt(1))
 	ret, _ := uuid.FromBytes(next.FillBytes(make([]byte, 16)))
 	return ret
-}
-
-// IsSerializable verifies whether a set of ranges can be serialized (i.e., strictly ordered)
-// and contains the full "Domain" UUID keyspace.
-//
-// The given `ranges` don't need to be ordered as long as the totality can be ordered.
-func IsRangeSerializable(ranges ...Range) bool {
-	var (
-		startRanges = make(map[uuid.UUID]Range)
-		start       = uuid.Nil
-		end         = Max
-	)
-
-	for _, r := range ranges {
-		// Skip any zeroed ranges
-		if r.from == Min && r.to == Min {
-			continue
-		}
-
-		startRanges[r.From()] = r
-	}
-
-	for start != end {
-		next, ok := startRanges[start]
-		if !ok {
-			return false
-		}
-
-		start = next.To()
-		if start == uuid.Nil {
-			return false
-		}
-	}
-
-	return true
-}
-
-// RangeDistributions takes a list of UUID ranges and calculates the distribution %
-// based on how many UUIDs are allocated in each. This is typically used in conjunction with
-// the `SplitByWeights` methods that create uneven allocations.
-//
-// The map that is returned is keyed by the index of the `ranges` that were inputed and the
-// value is a weighted percentage that the given range index has allocated.
-func RangeDistributions(ranges ...Range) map[int]int64 {
-	// Not all situations have a full UUID range so need to collect the total amount of UUIDs
-	// that can be allocated across the set of ranges given.
-	totalSize := slices.Fold(ranges, big.NewInt(0), func(total *big.Int, r Range) *big.Int {
-		return total.Add(total, r.Size())
-	})
-
-	// Map key is the index of the `ranges` element.
-	allocs := make(map[int]int64, len(ranges))
-
-	for index, rng := range ranges {
-		totalSizeF := big.NewFloat(0).SetInt(totalSize)
-		sizeF := big.NewFloat(0).SetInt(rng.Size())
-
-		// Handle zero weights
-		if rng.Size().Cmp(big.NewInt(0)) == 0 {
-			allocs[index] = 0
-			continue
-		}
-
-		// Size of allocation / Total size of UUID ranges
-		res := sizeF.Quo(sizeF, totalSizeF)
-		p, _ := res.Float64()
-
-		// Round is needed for some edge cases where values are 0.9999
-		//
-		// Normalized Percentage = Percentage of UUID Allocations * 100
-		allocs[index] = int64(math.Round(p * 100))
-	}
-
-	return allocs
 }
