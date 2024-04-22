@@ -1,12 +1,14 @@
 package slicex_test
 
 import (
-	"go.cloudkitchens.org/lib/slicex"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"go.cloudkitchens.org/lib/slicex"
 )
 
 var result int
@@ -112,20 +114,6 @@ func TestFlatten(t *testing.T) {
 
 	t.Run("nonempty", func(t *testing.T) {
 		require.Equal(t, slicex.Flatten([][]string{{"1", "2"}, {"3", "4"}, {"5"}}), []string{"1", "2", "3", "4", "5"})
-	})
-}
-
-func TestClone(t *testing.T) {
-	t.Run("empty", func(t *testing.T) {
-		require.Empty(t, slicex.Clone([]string{}))
-	})
-
-	t.Run("nonempty", func(t *testing.T) {
-		a := []string{"1", "2"}
-		b := slicex.Clone(a)
-		require.Equal(t, b, a)
-		a[0] = "3"
-		require.Equal(t, b, []string{"1", "2"})
 	})
 }
 

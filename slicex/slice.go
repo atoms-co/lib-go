@@ -2,6 +2,8 @@
 // is expected to be subsumed by the standard library at some point.
 package slicex
 
+import "slices"
+
 // New returns a slice from zero or more values. Useful in non-vararg contexts.
 func New[T any](ts ...T) []T {
 	return ts
@@ -62,17 +64,9 @@ func Flatten[T any](list [][]T) []T {
 	return ret
 }
 
-// Clone makes a copy of the slice (with value copy of elements).
-func Clone[T any](list []T) []T {
-	return append([]T{}, list...)
-}
-
 // CopyAppend makes a copy of the slice (with value copy of elements) and appends the elements to the copy.
 func CopyAppend[T any](list []T, elms ...T) []T {
-	ret := make([]T, 0, len(list)+len(elms))
-	ret = append(ret, list...)
-	ret = append(ret, elms...)
-	return ret
+	return slices.Concat(list, elms)
 }
 
 // Count returns the number of elements satisfying the predicate.
@@ -87,9 +81,9 @@ func Count[T any](list []T, fn func(T) bool) int {
 }
 
 // Contains returns true if at least one element satisfying the predicate is found.
+// Deprecated: use slices.ContainsFunc
 func Contains[T any](list []T, fn func(T) bool) bool {
-	_, ok := First(list, fn)
-	return ok
+	return slices.ContainsFunc(list, fn)
 }
 
 // ContainsT returns true if any of the elements are present in the list.
@@ -108,23 +102,12 @@ func ContainsT[T comparable](list []T, elms ...T) bool {
 
 // First returns the first element satisfying the predicate.
 func First[T any](list []T, fn func(T) bool) (T, bool) {
-	for _, v := range list {
-		if fn(v) {
-			return v, true
-		}
+	idx := slices.IndexFunc(list, fn)
+	if idx == -1 {
+		var ret T
+		return ret, false
 	}
-	var ret T
-	return ret, false
-}
-
-// FirstIndex returns the first index of the element satisfying the predicate.
-func FirstIndex[T any](list []T, fn func(T) bool) (int, bool) {
-	for i, v := range list {
-		if fn(v) {
-			return i, true
-		}
-	}
-	return -1, false
+	return list[idx], true
 }
 
 // Filter returns elements matching the filter function.
@@ -145,30 +128,4 @@ func NewSet[T comparable](keys ...T) map[T]bool {
 		m[k] = true
 	}
 	return m
-}
-
-// Equal determines if two lists are equal
-func Equal[T comparable](list1, list2 []T) bool {
-	if len(list1) != len(list2) {
-		return false
-	}
-	for i := range list1 {
-		if list1[i] != list2[i] {
-			return false
-		}
-	}
-	return true
-}
-
-// EqualFunc determines if two lists are equal matching a specific element predicate
-func EqualFunc[T any](list1, list2 []T, equal func(T, T) bool) bool {
-	if len(list1) != len(list2) {
-		return false
-	}
-	for i := range list1 {
-		if !equal(list1[i], list2[i]) {
-			return false
-		}
-	}
-	return true
 }
