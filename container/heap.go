@@ -3,6 +3,8 @@ package container
 import (
 	"container/heap"
 
+	"slices"
+
 	"go.atoms.co/slicex"
 )
 
@@ -75,11 +77,11 @@ func (h *Heap[T]) Len() int {
 
 // Remove removes the element satisfying the predicate.
 func (h *Heap[T]) Remove(fn func(x T) bool) bool {
-	idx, ok := slicex.FirstIndex(h.store.data, fn)
-	if ok {
+	idx := slices.IndexFunc(h.store.data, fn)
+	if idx != -1 {
 		heap.Remove(h.store, idx)
 	}
-	return ok
+	return idx != -1
 }
 
 // Elements return a list of elements stored in the heap

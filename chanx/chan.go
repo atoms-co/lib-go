@@ -5,8 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"slices"
+
 	"go.atoms.co/lib/iox"
-	"go.atoms.co/slicex"
 )
 
 // NewFixed returns a new closed chan with the given elements.
@@ -46,7 +47,7 @@ func Prepend[T any](in <-chan T, list ...T) <-chan T {
 // Append injects the given set of messages after the input chan messages. The returned chan is closed
 // when the input is closed and the appended messages are processed.
 func Append[T any](in <-chan T, list ...T) <-chan T {
-	cp := slicex.Clone(list)
+	cp := slices.Clone(list)
 
 	ret := make(chan T)
 	go func() {
