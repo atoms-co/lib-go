@@ -2,6 +2,7 @@ package uuidx
 
 import (
 	"crypto/md5"
+
 	"github.com/google/uuid"
 )
 

@@ -2,10 +2,12 @@ package chanx_test
 
 import (
 	"context"
-	"go.atoms.co/lib/chanx"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"go.atoms.co/lib/chanx"
 )
 
 func TestBroadcaster_SingleConsumer(t *testing.T) {

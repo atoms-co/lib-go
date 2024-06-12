@@ -1,10 +1,11 @@
 package mathx_test
 
 import (
-	"go.atoms.co/lib/testing/requirex"
-	"go.atoms.co/lib/mathx"
 	"fmt"
 	"testing"
+
+	"go.atoms.co/lib/testing/requirex"
+	"go.atoms.co/lib/mathx"
 )
 
 func TestIsPowerOf2(t *testing.T) {

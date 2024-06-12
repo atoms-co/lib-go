@@ -1,11 +1,13 @@
 package container_test
 
 import (
-	"go.atoms.co/lib/testing/assertx"
-	"go.atoms.co/lib/container"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"go.atoms.co/lib/testing/assertx"
+	"go.atoms.co/lib/container"
 )
 
 func TestCache(t *testing.T) {

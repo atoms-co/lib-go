@@ -3,12 +3,13 @@ package grpcx
 
 import (
 	"context"
-	"google.golang.org/grpc/credentials/insecure"
 	"time"
 
-	"go.atoms.co/lib/statshandlerx"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"go.atoms.co/lib/statshandlerx"
 )
 
 // WithInsecure returns an insecure transport credential option. Convenience replacement for the deprecated

@@ -1,11 +1,12 @@
 package container_test
 
 import (
-	"go.atoms.co/lib/container"
 	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"go.atoms.co/lib/container"
 )
 
 func TestHeapInt(t *testing.T) {
@@ -44,7 +45,7 @@ func TestHeapInt(t *testing.T) {
 	require.Equal(t, heap.Len(), 0)
 }
 
-func eq(x int) func(a int)bool  {
+func eq(x int) func(a int) bool {
 	return func(a int) bool {
 		return x == a
 	}

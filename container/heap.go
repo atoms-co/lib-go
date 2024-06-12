@@ -2,7 +2,6 @@ package container
 
 import (
 	"container/heap"
-
 	"slices"
 
 	"go.atoms.co/slicex"
