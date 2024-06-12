@@ -1,10 +1,12 @@
 package container_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
 	"go.cloudkitchens.org/lib/testing/assertx"
 	"go.cloudkitchens.org/lib/container"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestRingBuf(t *testing.T) {

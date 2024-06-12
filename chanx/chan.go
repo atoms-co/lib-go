@@ -2,10 +2,9 @@
 package chanx
 
 import (
+	"slices"
 	"sync"
 	"time"
-
-	"slices"
 
 	"go.cloudkitchens.org/lib/iox"
 )

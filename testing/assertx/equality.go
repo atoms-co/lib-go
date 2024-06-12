@@ -1,9 +1,10 @@
 package assertx
 
 import (
+	"testing"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 // Equal is a typed convenience wrapper over assert.Equal to make constants the correct type. Also

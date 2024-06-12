@@ -1,11 +1,13 @@
 package container_test
 
 import (
-	"go.cloudkitchens.org/lib/testing/assertx"
-	"go.cloudkitchens.org/lib/container"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"go.cloudkitchens.org/lib/testing/assertx"
+	"go.cloudkitchens.org/lib/container"
 )
 
 func TestCache(t *testing.T) {

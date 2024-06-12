@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"go.cloudkitchens.org/lib/syncx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"go.cloudkitchens.org/lib/syncx"
 )
 
 func TestLock(t *testing.T) {

@@ -1,10 +1,12 @@
 package uuidx_test
 
 import (
+	"testing"
+
+	"github.com/google/uuid"
+
 	"go.cloudkitchens.org/lib/testing/requirex"
 	"go.cloudkitchens.org/lib/uuidx"
-	"github.com/google/uuid"
-	"testing"
 )
 
 func TestRetainBits(t *testing.T) {

@@ -1,9 +1,10 @@
 package requirex
 
 import (
+	"testing"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 // Equal is a typed convenience wrapper over require.Equal to make constants the correct type. Also

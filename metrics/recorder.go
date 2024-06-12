@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"go.cloudkitchens.org/lib/mathx"
-
-	"go.cloudkitchens.org/lib/log"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+
+	"go.cloudkitchens.org/lib/log"
+	"go.cloudkitchens.org/lib/mathx"
 )
 
 const (
@@ -178,11 +178,11 @@ func newGauge(name Name, description string, tagKeys []Key) Gauge {
 // getExponentialBuckets calculates the exponential growth factor based on the start, end and num buckets
 // and returns the buckets. We thus want, for given start, end and N:
 //
-//       end = start * factor^(N-1)
+//	end = start * factor^(N-1)
 //
 // After computing 'factor', the bucket boundaries become:
 //
-//       boundary[i] = start * factor^i
+//	boundary[i] = start * factor^i
 //
 // for i in [0; N-1]. Note that factor^0 = 1, so boundary[0] = start.
 func getExponentialBuckets(start, end float64, n int) []float64 {

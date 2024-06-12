@@ -1,10 +1,11 @@
 package signalx
 
 import (
-	"go.cloudkitchens.org/lib/iox"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.cloudkitchens.org/lib/iox"
 )
 
 // InterruptChan returns a channel that receives a signal when the process receives either syscall.SIGTERM or syscall.SIGINT
