@@ -2,6 +2,7 @@
 package backoffx
 
 import (
+	"context"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -10,6 +11,7 @@ import (
 )
 
 type BackOff = backoff.BackOff
+type BackOffContext = backoff.BackOffContext
 
 // Option represents an option for backoff.
 type Option struct {
@@ -41,6 +43,13 @@ func WithMaxInterval(interval time.Duration) Option {
 // WithMaxRetries set the maximum number of retries regardless of the time used. Default: no maximum.
 func WithMaxRetries(n int) Option {
 	return Option{max: n}
+}
+
+// WithContext returns a BackOffContext with context ctx
+//
+// ctx must not be nil
+func WithContext(b BackOff, ctx context.Context) BackOffContext {
+	return backoff.WithContext(b, ctx)
 }
 
 // NewUnlimited returns a new exponential backoff without a max elapsed time.
