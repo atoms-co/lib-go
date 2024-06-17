@@ -19,3 +19,10 @@ func Element[T any](list []T) T {
 	}
 	return list[rand.Intn(len(list))]
 }
+
+// Shuffle pseudo-randomizes the order of elements of the slice in place.
+func Shuffle[S ~[]E, E any](s S) {
+	rand.Shuffle(len(s), func(i, j int) {
+		s[i], s[j] = s[j], s[i]
+	})
+}
