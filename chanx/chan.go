@@ -243,7 +243,7 @@ func TryWrite[T any](ch chan<- T, t T, timeout time.Duration) bool {
 	}
 }
 
-// TryDrain reads, waiting up to the given timeout, Returns true if channel close indicator is return, false otherwise.
+// TryDrain reads, waiting up to the given timeout. Returns true if channel is closed, false otherwise.
 func TryDrain[T any](ch <-chan T, timeout time.Duration) bool {
 	timer := time.NewTimer(timeout)
 	defer timer.Stop()
