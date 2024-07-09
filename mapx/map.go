@@ -207,3 +207,14 @@ func Merge[K comparable, V any](maps ...map[K]V) map[K]V {
 	}
 	return rt
 }
+
+// GetOnly returns the only key-value pair in the map. When used with a map that has more than one element,
+// returns an arbitrary pair and true. When used with an empty map, returns the zero values and false.
+func GetOnly[K comparable, V any](m map[K]V) (K, V, bool) {
+	for k, v := range m {
+		return k, v, true
+	}
+	var k K
+	var v V
+	return k, v, false
+}
