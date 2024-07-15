@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	stdlog "log"
+	"os"
 
 	"go.atoms.co/lib/log"
 	"go.atoms.co/lib/log/zap"
@@ -13,9 +14,16 @@ import (
 
 var (
 	logger = flag.String("logger", "stackdriver", "Logger to use")
-	level  = flag.String("log-level", "", "Log severity cutoff (default: no cutoff)")
+	level  = flag.String("log-level", readStringEnvValue("LOG_LEVEL", ""), "Log severity cutoff (default: no cutoff)")
 	long   = flag.Bool("log-long-filenames", false, "Enable long file names in log messages")
 )
+
+func readStringEnvValue(key string, def string) string {
+	if val, ok := os.LookupEnv(key); ok {
+		return val
+	}
+	return def
+}
 
 // Init initializes the global logger as configured via flags.
 func Init(ctx context.Context) {
