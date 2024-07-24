@@ -2,6 +2,8 @@
 // is expected to be subsumed by the standard library at some point.
 package mapx
 
+import "maps"
+
 // New returns a map from intrinsically keyed values.
 func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
 	ret := map[K]V{}
@@ -151,12 +153,9 @@ func Flatten[K comparable, V any](m map[K][]V) []V {
 }
 
 // Clone makes a copy of the map (with value copy of keys and values).
+// Deprecated: use maps.Clone
 func Clone[K comparable, V any](m map[K]V) map[K]V {
-	ret := make(map[K]V, len(m))
-	for k, v := range m {
-		ret[k] = v
-	}
-	return ret
+	return maps.Clone(m)
 }
 
 // Contains returns true if the given key is in the map.
@@ -177,20 +176,6 @@ func FilterKeys[K comparable, V any](m map[K]V, fn func(K) bool) map[K]V {
 		}
 	}
 	return ret
-}
-
-// Equals returns true if both maps contain the same elements
-func Equals[K comparable, V comparable](left map[K]V, right map[K]V) bool {
-	if len(left) != len(right) {
-		return false
-	}
-	for k, l := range left {
-		r, ok := right[k]
-		if !ok || l != r {
-			return false
-		}
-	}
-	return true
 }
 
 // Merge combines multiple maps into a single map. Values with identical keys are overridden by the last one.
