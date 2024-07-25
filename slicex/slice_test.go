@@ -47,9 +47,23 @@ func BenchmarkMap80000(b *testing.B)  { benchmarkMap(80000, b) }
 func BenchmarkMap90000(b *testing.B)  { benchmarkMap(90000, b) }
 func BenchmarkMap100000(b *testing.B) { benchmarkMap(100000, b) }
 
+func TestNew(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		require.Nil(t, slicex.New[int]())
+	})
+
+	t.Run("nonempty", func(t *testing.T) {
+		require.Equal(t, slicex.New(1, 2, 3), []int{1, 2, 3})
+	})
+}
+
 func TestMap(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		require.Empty(t, slicex.Map([]int{}, strconv.Itoa))
+		require.Nil(t, slicex.Map([]int{}, strconv.Itoa))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Nil(t, slicex.Map(nil, strconv.Itoa))
 	})
 
 	t.Run("nonempty", func(t *testing.T) {
@@ -59,7 +73,11 @@ func TestMap(t *testing.T) {
 
 func TestFlatMap(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		require.Empty(t, slicex.FlatMap([]string{}, strings.Fields))
+		require.Nil(t, slicex.FlatMap([]string{}, strings.Fields))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Nil(t, slicex.FlatMap(nil, strings.Fields))
 	})
 
 	t.Run("nonempty", func(t *testing.T) {
@@ -73,7 +91,11 @@ func TestMapIf(t *testing.T) {
 	}
 
 	t.Run("empty", func(t *testing.T) {
-		require.Empty(t, slicex.MapIf([]int{}, f))
+		require.Nil(t, slicex.MapIf([]int{}, f))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Nil(t, slicex.MapIf(nil, f))
 	})
 
 	t.Run("nonempty", func(t *testing.T) {
@@ -92,7 +114,13 @@ func TestTryMap(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		s, err := slicex.TryMap([]int{}, f)
 		require.NoError(t, err)
-		require.Empty(t, s)
+		require.Nil(t, s)
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		s, err := slicex.TryMap(nil, f)
+		require.NoError(t, err)
+		require.Nil(t, s)
 	})
 
 	t.Run("without errors", func(t *testing.T) {
@@ -109,7 +137,11 @@ func TestTryMap(t *testing.T) {
 
 func TestFlatten(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		require.Empty(t, slicex.Flatten([][]string{}))
+		require.Nil(t, slicex.Flatten([][]string{}))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Nil(t, slicex.Flatten[[]string](nil))
 	})
 
 	t.Run("nonempty", func(t *testing.T) {
@@ -176,8 +208,16 @@ func TestContains(t *testing.T) {
 }
 
 func TestContainsT(t *testing.T) {
-	t.Run("empty", func(t *testing.T) {
+	t.Run("empty list", func(t *testing.T) {
 		require.False(t, slicex.ContainsT([]int{}, 1))
+	})
+
+	t.Run("nil list", func(t *testing.T) {
+		require.False(t, slicex.ContainsT(nil, 1))
+	})
+
+	t.Run("empty elms", func(t *testing.T) {
+		require.False(t, slicex.ContainsT([]int{1}))
 	})
 
 	t.Run("no matches", func(t *testing.T) {
@@ -216,7 +256,11 @@ func TestFilter(t *testing.T) {
 	}
 
 	t.Run("empty", func(t *testing.T) {
-		require.Empty(t, slicex.Filter([]int{}, f))
+		require.Nil(t, slicex.Filter([]int{}, f))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Nil(t, slicex.Filter(nil, f))
 	})
 
 	t.Run("no matches", func(t *testing.T) {

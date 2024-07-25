@@ -11,6 +11,9 @@ func New[T any](ts ...T) []T {
 
 // Map transforms all elements.
 func Map[T, U any](list []T, fn func(T) U) []U {
+	if len(list) == 0 {
+		return nil
+	}
 	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		ret = append(ret, fn(v))
@@ -20,6 +23,9 @@ func Map[T, U any](list []T, fn func(T) U) []U {
 
 // FlatMap transforms all elements into a list and flattens it.
 func FlatMap[T, U any](list []T, fn func(T) []U) []U {
+	if len(list) == 0 {
+		return nil
+	}
 	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		ret = append(ret, fn(v)...)
@@ -29,6 +35,9 @@ func FlatMap[T, U any](list []T, fn func(T) []U) []U {
 
 // MapIf transforms selected elements.
 func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
+	if len(list) == 0 {
+		return nil
+	}
 	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		if u, ok := fn(v); ok {
@@ -40,6 +49,9 @@ func MapIf[T, U any](list []T, fn func(T) (U, bool)) []U {
 
 // TryMap transforms all elements using the provided function or returns the first error.
 func TryMap[T, U any](list []T, fn func(T) (U, error)) ([]U, error) {
+	if len(list) == 0 {
+		return nil, nil
+	}
 	ret := make([]U, 0, len(list))
 	for _, v := range list {
 		u, err := fn(v)
@@ -53,9 +65,15 @@ func TryMap[T, U any](list []T, fn func(T) (U, error)) ([]U, error) {
 
 // Flatten flattens a slice of slices.
 func Flatten[T any](list [][]T) []T {
+	if len(list) == 0 {
+		return nil
+	}
 	size := 0
 	for _, v := range list {
 		size += len(v)
+	}
+	if size == 0 {
+		return nil
 	}
 	ret := make([]T, 0, size)
 	for _, v := range list {
@@ -88,6 +106,9 @@ func Contains[T any](list []T, fn func(T) bool) bool {
 
 // ContainsT returns true if any of the elements are present in the list.
 func ContainsT[T comparable](list []T, elms ...T) bool {
+	if len(list) == 0 || len(elms) == 0 {
+		return false
+	}
 	m := map[T]bool{}
 	for _, elm := range elms {
 		m[elm] = true
