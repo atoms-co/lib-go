@@ -2,8 +2,6 @@
 // is expected to be subsumed by the standard library at some point.
 package mapx
 
-import "maps"
-
 // New returns a map from intrinsically keyed values.
 func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
 	ret := map[K]V{}
@@ -150,12 +148,6 @@ func Flatten[K comparable, V any](m map[K][]V) []V {
 		ret = append(ret, v...)
 	}
 	return ret
-}
-
-// Clone makes a copy of the map (with value copy of keys and values).
-// Deprecated: use maps.Clone
-func Clone[K comparable, V any](m map[K]V) map[K]V {
-	return maps.Clone(m)
 }
 
 // Contains returns true if the given key is in the map.
