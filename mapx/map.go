@@ -4,7 +4,7 @@ package mapx
 
 // New returns a map from intrinsically keyed values.
 func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
-	ret := map[K]V{}
+	ret := make(map[K]V, len(values))
 	for _, v := range values {
 		ret[keyOf(v)] = v
 	}
@@ -13,7 +13,7 @@ func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
 
 // MapNew returns a map from transformed values.
 func MapNew[K comparable, V any, T any](values []T, fn func(T) (K, V)) map[K]V {
-	ret := map[K]V{}
+	ret := make(map[K]V, len(values))
 	for _, t := range values {
 		k, v := fn(t)
 		ret[k] = v
@@ -23,6 +23,9 @@ func MapNew[K comparable, V any, T any](values []T, fn func(T) (K, V)) map[K]V {
 
 // Keys extracts all keys to a slice.
 func Keys[K comparable, V any](m map[K]V) []K {
+	if len(m) == 0 {
+		return nil
+	}
 	ret := make([]K, 0, len(m))
 	for k := range m {
 		ret = append(ret, k)
@@ -32,6 +35,9 @@ func Keys[K comparable, V any](m map[K]V) []K {
 
 // Values extracts all values to a slice.
 func Values[K comparable, V any](m map[K]V) []V {
+	if len(m) == 0 {
+		return nil
+	}
 	ret := make([]V, 0, len(m))
 	for _, v := range m {
 		ret = append(ret, v)
@@ -41,6 +47,9 @@ func Values[K comparable, V any](m map[K]V) []V {
 
 // ValuesIf extracts all values to a slice, if they satisfy the given predicate.
 func ValuesIf[K comparable, V any](m map[K]V, fn func(V) bool) []V {
+	if len(m) == 0 {
+		return nil
+	}
 	var ret []V
 	for _, v := range m {
 		if fn(v) {
@@ -52,7 +61,7 @@ func ValuesIf[K comparable, V any](m map[K]V, fn func(V) bool) []V {
 
 // Map extracts all transformed keys and values to a map.
 func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]V1 {
-	ret := make(map[K1]V1)
+	ret := make(map[K1]V1, len(m))
 	for k, v := range m {
 		k1, v1 := fn(k, v)
 		ret[k1] = v1
@@ -62,7 +71,7 @@ func Map[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1)) map[K1]
 
 // TryMap extracts all transformed keys and values to a map.
 func TryMap[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1, error)) (map[K1]V1, error) {
-	ret := make(map[K1]V1)
+	ret := make(map[K1]V1, len(m))
 	for k, v := range m {
 		k1, v1, err := fn(k, v)
 		if err != nil {
@@ -101,6 +110,9 @@ func TryMapIf[K, K1 comparable, V, V1 any](m map[K]V, fn func(K, V) (K1, V1, boo
 
 // MapValues extracts all transformed values to a slice.
 func MapValues[K comparable, V, T any](m map[K]V, fn func(V) T) []T {
+	if len(m) == 0 {
+		return nil
+	}
 	ret := make([]T, 0, len(m))
 	for _, v := range m {
 		ret = append(ret, fn(v))
@@ -110,6 +122,9 @@ func MapValues[K comparable, V, T any](m map[K]V, fn func(V) T) []T {
 
 // MapValuesIf extracts selected transformed values to a slice.
 func MapValuesIf[K comparable, V, T any](m map[K]V, fn func(V) (T, bool)) []T {
+	if len(m) == 0 {
+		return nil
+	}
 	var ret []T
 	for _, v := range m {
 		if w, ok := fn(v); ok {
@@ -121,7 +136,10 @@ func MapValuesIf[K comparable, V, T any](m map[K]V, fn func(V) (T, bool)) []T {
 
 // MapToSlice extracts all transformed entries to a slice.
 func MapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) T) []T {
-	var ret []T
+	if len(m) == 0 {
+		return nil
+	}
+	ret := make([]T, 0, len(m))
 	for k, v := range m {
 		ret = append(ret, fn(k, v))
 	}
@@ -130,6 +148,9 @@ func MapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) T) []T {
 
 // TryMapToSlice extracts all transformed entries to a slice.
 func TryMapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) (T, error)) ([]T, error) {
+	if len(m) == 0 {
+		return nil, nil
+	}
 	ret := make([]T, 0, len(m))
 	for k, v := range m {
 		e, err := fn(k, v)
@@ -143,6 +164,9 @@ func TryMapToSlice[K comparable, V, T any](m map[K]V, fn func(k K, v V) (T, erro
 
 // Flatten extracts all value elements of a multi-map to a single slice.
 func Flatten[K comparable, V any](m map[K][]V) []V {
+	if len(m) == 0 {
+		return nil
+	}
 	var ret []V
 	for _, v := range m {
 		ret = append(ret, v...)
