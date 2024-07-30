@@ -9,6 +9,9 @@ import (
 	promExporter "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
+	promethusOTel "go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/sdk/metric"
 
 	"go.atoms.co/lib/log"
 	"go.atoms.co/lib/metrics"
@@ -40,6 +43,8 @@ func Init(ctx context.Context, application string) {
 		}
 	}()
 
+	initOTelMetricExporter(ctx)
+
 	if err := metrics.Init(application); err != nil {
 		log.Exitf(ctx, "Failed to initialize metric: %v", err)
 	}
@@ -47,4 +52,13 @@ func Init(ctx context.Context, application string) {
 
 func Shutdown(ctx context.Context) error {
 	return srv.Shutdown(ctx)
+}
+
+func initOTelMetricExporter(ctx context.Context) {
+	exporter, err := promethusOTel.New()
+	if err != nil {
+		log.Exitf(ctx, "Failed to initialize OTel metric exporter: %v", err)
+	}
+	meterProvider := metric.NewMeterProvider(metric.WithReader(exporter))
+	otel.SetMeterProvider(meterProvider)
 }
