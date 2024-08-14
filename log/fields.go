@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"slices"
 	"time"
 )
 
@@ -87,8 +88,8 @@ type Field struct {
 func NewContext(ctx context.Context, fields ...Field) context.Context {
 	existing := ctx.Value(logFieldsKey)
 	existingFields, _ := existing.([]Field)
-	fields = append(existingFields, fields...)
-	return context.WithValue(ctx, logFieldsKey, fields)
+	newFields := slices.Concat(existingFields, fields)
+	return context.WithValue(ctx, logFieldsKey, newFields)
 }
 
 func FromContext(ctx context.Context) []Field {
