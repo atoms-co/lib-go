@@ -8,6 +8,7 @@ import (
 
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/runmetrics"
+	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 )
 
@@ -18,6 +19,15 @@ const (
 	Uniform
 	UserDefined
 	version = "1.0.0"
+)
+
+type UnitType string
+
+const (
+	UnitDimensionless UnitType = stats.UnitDimensionless
+	UnitBytes         UnitType = stats.UnitBytes
+	UnitMilliseconds  UnitType = stats.UnitMilliseconds
+	UnitSeconds       UnitType = stats.UnitSeconds
 )
 
 // Name is the name of the metric.
@@ -31,7 +41,8 @@ type BucketOptions struct {
 	End float64
 	// Number of Buckets (>0).
 	NumBuckets int
-	// LatencyUnit - "time.Second" or "time.Millisecond".
+	// LatencyUnit is the unit of the bucket boundaries for duration-based histograms.
+	// "time.Second" or "time.Millisecond". time.Second is the default.
 	LatencyUnit time.Duration
 	// Distribution
 	DistributionType Distribution
@@ -97,13 +108,14 @@ type Gauge interface {
 	Set(ctx context.Context, value float64, tags ...Tag)
 }
 
-// Histogram sets the value for appropriate histogram.
-type Histogram interface {
+// GenericHistogram sets a value for appropriate histogram.
+type GenericHistogram[T float64 | time.Duration] interface {
 	// Observe adds a single observation to the histogram.
-	// values is a map of all the tag keys with their
-	// corresponding values.
-	Observe(ctx context.Context, duration time.Duration, tags ...Tag)
+	Observe(ctx context.Context, value T, tags ...Tag)
 }
+
+// Histogram sets a duration value for appropriate histogram.
+type Histogram = GenericHistogram[time.Duration]
 
 // NewCounter instantiates a counter type for the given metric name, description with
 // the given metric tag keys, if any.
@@ -117,11 +129,22 @@ func NewGauge(name Name, description string, tagKeys ...Key) Gauge {
 	return newGauge(name, description, tagKeys)
 }
 
-// NewHistogram instantiates a histogram type for the given metric name, description and
-// options which can be used to specify the bucket boundaries and the metric tag
-// keys, if any.
+// NewHistogram instantiates a histogram with duration values for the given metric name, description and
+// options which can be used to specify the bucket boundaries and the metric tag keys, if any.
 func NewHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys ...Key) Histogram {
-	return newHistogram(name, description, bucketOptions, tagKeys)
+	return newDurationHistogram(name, description, bucketOptions, tagKeys)
+}
+
+// NewDimensionlessHistogram instantiates a histogram with float values for the given metric name, description and
+// options which can be used to specify the bucket boundaries and the metric tag keys, if any.
+func NewDimensionlessHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys ...Key) GenericHistogram[float64] {
+	return newHistogram(name, description, UnitDimensionless, bucketOptions, tagKeys)
+}
+
+// NewByteHistogram instantiates a histogram with byte values for the given metric name, description and
+// options which can be used to specify the bucket boundaries and the metric tag keys, if any.
+func NewByteHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys ...Key) GenericHistogram[float64] {
+	return newHistogram(name, description, UnitBytes, bucketOptions, tagKeys)
 }
 
 // NewSingleViewCounter instantiates a counter type for the given metrics name, description with

@@ -12,7 +12,6 @@ import (
 	"go.opencensus.io/tag"
 
 	"go.cloudkitchens.org/lib/log"
-	"go.cloudkitchens.org/lib/mathx"
 )
 
 const (
@@ -189,7 +188,7 @@ func getExponentialBuckets(start, end float64, n int) []float64 {
 	if start <= 0 {
 		start = 1.0
 	}
-	n = mathx.MinInt(mathx.MaxInt(n, 2), maxBuckets)
+	n = min(max(n, 2), maxBuckets)
 
 	buckets := make([]float64, n)
 	factor := math.Pow(end/start, 1.0/float64(n-1))
@@ -211,7 +210,7 @@ func getUniformBuckets(start, end float64, n int) []float64 {
 	if start < 0 {
 		start = 1.0
 	}
-	n = mathx.MinInt(mathx.MaxInt(n, 2), maxBuckets)
+	n = min(max(n, 2), maxBuckets)
 
 	buckets := make([]float64, n)
 	step := (end - start) / float64(n-1)
@@ -245,24 +244,25 @@ func dropNonPosBuckets(input []float64) []float64 {
 	return []float64{}
 }
 
-// getBuckets uses an underlying utility function to get the exponential buckets.
-func getBuckets(opt *BucketOptions) []float64 {
+// getBuckets uses an underlying utility function to get buckets.
+func getBuckets(opt *BucketOptions, unitType UnitType) []float64 {
 	if opt == nil {
 		opt = defaultBucketOptions
 	}
 
-	// convert units to seconds
 	var unit, start, end float64
-	switch opt.LatencyUnit {
-	case time.Millisecond:
+	switch unitType {
+	case UnitSeconds:
+		unit = 1.0
+		if opt.LatencyUnit != 0 {
+			unit = float64(opt.LatencyUnit) / float64(time.Second)
+		}
+		start = opt.Start * unit
+		end = opt.End * unit
+	default:
 		unit = 1.0
 		start = opt.Start
 		end = opt.End
-	default:
-		// anything other than millisecond is reported in seconds, so scale buckets to that
-		unit = float64(opt.LatencyUnit) / float64(time.Second)
-		start = opt.Start * unit
-		end = opt.End * unit
 	}
 
 	if opt.DistributionType == Exponential {
@@ -274,17 +274,13 @@ func getBuckets(opt *BucketOptions) []float64 {
 	}
 }
 
-func setupHistogram(name string, description string, bucketOptions *BucketOptions, tagKeys []Key) (*recorder, error) {
+func setupHistogram(name string, description string, unitType UnitType, bucketOptions *BucketOptions, tagKeys []Key) (*recorder, error) {
 	r := &recorder{
 		registeredKeys: make(map[Key]bool),
 	}
 	tags := setupTags(r, tagKeys)
-	unit := stats.UnitSeconds
-	if bucketOptions != nil && bucketOptions.LatencyUnit == time.Millisecond {
-		unit = stats.UnitMilliseconds
-	}
-	m := stats.Float64(name, description, unit)
-	buckets := getBuckets(bucketOptions)
+	m := stats.Float64(name, description, string(unitType))
+	buckets := getBuckets(bucketOptions, unitType)
 	err := view.Register(&view.View{
 		Name:        name,
 		Description: description,
@@ -300,18 +296,22 @@ func setupHistogram(name string, description string, bucketOptions *BucketOption
 	return r, nil
 }
 
-func (r *recorder) Observe(ctx context.Context, elapsed time.Duration, tags ...Tag) {
-	var dur float64
-	switch r.measure.Unit() {
-	case stats.UnitMilliseconds:
-		dur = float64(elapsed.Milliseconds())
-	default:
-		dur = elapsed.Seconds()
-	}
-	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(dur))
+type latencyHistogramRecorder struct {
+	*recorder
 }
 
-func newHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys []Key) Histogram {
+func (r *latencyHistogramRecorder) Observe(ctx context.Context, value time.Duration, tags ...Tag) {
+	var v float64
+	switch r.measure.Unit() {
+	case stats.UnitMilliseconds:
+		v = float64(value.Milliseconds())
+	case stats.UnitSeconds:
+		v = value.Seconds()
+	}
+	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(v))
+}
+
+func newDurationHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys []Key) Histogram {
 	lock.Lock()
 	defer lock.Unlock()
 	_, existed := recorders[name]
@@ -319,13 +319,42 @@ func newHistogram(name Name, description string, bucketOptions *BucketOptions, t
 		panic(fmt.Sprintf("Histogram \"%v\" is already registered", name))
 	}
 
-	r, err := setupHistogram(name, description, bucketOptions, tagKeys)
+	unitType := UnitSeconds
+	if bucketOptions != nil && bucketOptions.LatencyUnit == time.Millisecond {
+		unitType = UnitMilliseconds
+	}
+	r, err := setupHistogram(name, description, unitType, bucketOptions, tagKeys)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to register histogram: %v", err))
 	}
 	recorders[name] = r
 
-	return r
+	return &latencyHistogramRecorder{recorder: r}
+}
+
+type floatHistogramRecorder struct {
+	*recorder
+}
+
+func (r *floatHistogramRecorder) Observe(ctx context.Context, value float64, tags ...Tag) {
+	stats.Record(getTagCtx(ctx, r.registeredKeys, tags), r.measure.M(value))
+}
+
+func newHistogram(name Name, description string, unitType UnitType, bucketOptions *BucketOptions, tagKeys []Key) GenericHistogram[float64] {
+	lock.Lock()
+	defer lock.Unlock()
+	_, existed := recorders[name]
+	if existed {
+		panic(fmt.Sprintf("Histogram \"%v\" is already registered", name))
+	}
+
+	r, err := setupHistogram(name, description, unitType, bucketOptions, tagKeys)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to register histogram: %v", err))
+	}
+	recorders[name] = r
+
+	return &floatHistogramRecorder{recorder: r}
 }
 
 // setupTags sets up the tag keys and returns the corresponding []tag.Key
