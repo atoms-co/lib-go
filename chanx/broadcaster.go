@@ -52,9 +52,10 @@ func (b *Broadcaster[T]) Connect() (<-chan T, iox.AsyncCloser) {
 	go func() {
 		<-quit.Closed()
 		syncx.AsyncTxn(b.txn, func() {
-			out := b.outs[id]
-			delete(b.outs, id)
-			close(out)
+			if out, ok := b.outs[id]; ok {
+				delete(b.outs, id)
+				close(out)
+			} // else: not added due to broadcaster closed
 		})
 	}()
 	if err != nil {
@@ -62,6 +63,22 @@ func (b *Broadcaster[T]) Connect() (<-chan T, iox.AsyncCloser) {
 		return ret, quit
 	}
 	return ret, quit
+}
+
+// Listen connects a consumer to the broadcaster without the option to disconnect. Returns a
+// buffered never-closed channel with the latest message, when available.
+func (b *Broadcaster[T]) Listen() <-chan T {
+	ret := make(chan T, 1)
+
+	syncx.AsyncTxn(b.txn, func() {
+		b.idx++
+		b.outs[b.idx] = ret
+		if b.isLatest {
+			ret <- b.latest // initialize channel with latest message
+		}
+	})
+
+	return ret
 }
 
 // Forward begins forwarding a new channel to all connected consumers. Waits on the previous message to finish sending.
