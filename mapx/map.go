@@ -11,6 +11,16 @@ func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
 	return ret
 }
 
+// Clone makes a copy of the map (with value copy of keys and values).
+// TODO(jhhurwitz): 09/16/24 Remove when we upgrade to go 1.23 (https://github.com/golang/go/issues/69110)
+func Clone[K comparable, V any](m map[K]V) map[K]V {
+	ret := make(map[K]V, len(m))
+	for k, v := range m {
+		ret[k] = v
+	}
+	return ret
+}
+
 // MapNew returns a map from transformed values.
 func MapNew[K comparable, V any, T any](values []T, fn func(T) (K, V)) map[K]V {
 	ret := make(map[K]V, len(values))
