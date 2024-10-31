@@ -143,7 +143,11 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 	}
 
 	go chanx.Drain(out)
-	return recvErr.Load().(error)
+	rt := recvErr.Load()
+	if rt != nil {
+		return rt.(error)
+	}
+	return nil
 }
 
 // ConnectNonBlocking returns a connection type T, if the connection is successful. Non-blocking.
