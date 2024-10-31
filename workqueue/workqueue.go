@@ -2,7 +2,7 @@
 package workqueue
 
 import (
-	"go.uber.org/atomic"
+	"sync/atomic"
 )
 
 // WorkQueue is a simple work queue with bounded concurrency, optionally buffered. Intended for IO operations. The
@@ -52,7 +52,7 @@ func (p *WorkQueue) Capacity() int {
 }
 
 func (p *WorkQueue) Close() {
-	if p.closed.CAS(false, true) {
+	if p.closed.CompareAndSwap(false, true) {
 		close(p.quit)
 	}
 }
@@ -64,24 +64,24 @@ func (p *WorkQueue) process() {
 			// backlog, if we can't process it to maintain back pressure.
 
 			<-p.completed
-			p.active.Dec()
+			p.active.Add(-1)
 			continue // check for capacity again, in case pool was resized
 		}
 
 		select {
 		case fn := <-p.pending:
-			p.active.Inc()
+			p.active.Add(1)
 			go p.run(fn)
 
 		case <-p.completed:
-			p.active.Dec()
+			p.active.Add(-1)
 
 		case <-p.quit:
 			// Let active routines terminate to avoid leaking them. Then exit.
 
 			for p.active.Load() > 0 {
 				<-p.completed
-				p.active.Dec()
+				p.active.Add(-1)
 			}
 			return
 		}

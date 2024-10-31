@@ -1,7 +1,7 @@
 package syncx
 
 import (
-	"go.uber.org/atomic"
+	"sync/atomic"
 
 	"go.atoms.co/lib/iox"
 )
@@ -41,7 +41,7 @@ func (l *Lock) TryLock() <-chan bool {
 // limit. There is a slight delay for the lock to be re-enqueued, so a Unlock + default-select
 // TryLock may fail to acquire the released lock.
 func (l *Lock) Unlock() {
-	l.pending.Inc()
+	l.pending.Add(1)
 
 	select {
 	case l.pulse <- true:
@@ -61,7 +61,7 @@ func (l *Lock) process() {
 		case <-l.pulse:
 			n := int(l.pending.Load())
 			for i := 0; i < n; i++ {
-				l.pending.Dec()
+				l.pending.Add(-1)
 
 				if l.IsClosed() {
 					return // ensure Close + Unlock does not allow a lock
