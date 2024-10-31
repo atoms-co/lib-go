@@ -3,8 +3,7 @@ package iox
 
 import (
 	"context"
-
-	"go.uber.org/atomic"
+	"sync/atomic"
 )
 
 // AsyncCloser is an async closer that supports a quit chan as a close notification mechanism. Thread-safe.
@@ -46,7 +45,7 @@ func (c *asyncCloser) Closed() <-chan struct{} {
 }
 
 func (c *asyncCloser) Close() {
-	if c.closed.CAS(false, true) {
+	if c.closed.CompareAndSwap(false, true) {
 		close(c.quit)
 	}
 }

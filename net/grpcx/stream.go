@@ -2,9 +2,9 @@ package grpcx
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
-	"go.uber.org/atomic"
 	"google.golang.org/grpc"
 
 	"go.cloudkitchens.org/lib/log"
@@ -105,7 +105,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 		return err
 	}
 
-	var recvErr atomic.Error
+	var recvErr atomic.Value
 
 	go func() {
 		defer close(in)
@@ -143,7 +143,7 @@ func Connect[A, B any, S Stream[A, B]](ctx context.Context, con func(context.Con
 	}
 
 	go chanx.Drain(out)
-	return recvErr.Load()
+	return recvErr.Load().(error)
 }
 
 // ConnectNonBlocking returns a connection type T, if the connection is successful. Non-blocking.
