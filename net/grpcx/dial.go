@@ -3,9 +3,9 @@ package grpcx
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -30,7 +30,7 @@ func Dial(ctx context.Context, endpoint string, timeout time.Duration, opts ...g
 func DialNonBlocking(ctx context.Context, endpoint string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	cc, err := grpc.DialContext(ctx, endpoint, append(opts, statshandlerx.WithClientGRPCStatsHandler())...)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to dial server at %v", endpoint)
+		return nil, fmt.Errorf("failed to dial server at %v: %w", endpoint, err)
 	}
 	return cc, nil
 }
