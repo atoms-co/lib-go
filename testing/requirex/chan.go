@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"go.atoms.co/lib/clock"
 	"go.atoms.co/lib/chanx"
 )
 
@@ -29,7 +30,7 @@ func ChanNonEmpty[T any](t *testing.T, c <-chan T) {
 func Element[T any](t *testing.T, ch <-chan T, args ...any) T {
 	t.Helper()
 
-	elm, ok := chanx.TryRead(ch, chanWait)
+	elm, ok := chanx.TryRead(ch, clock.New(), chanWait)
 	if len(args) == 0 {
 		args = []any{"no element in channel"}
 	}
@@ -41,7 +42,7 @@ func Element[T any](t *testing.T, ch <-chan T, args ...any) T {
 func Closed[T any](t *testing.T, ch <-chan T, args ...any) {
 	t.Helper()
 
-	ok := chanx.TryDrain(ch, chanWait)
+	ok := chanx.TryDrain(ch, clock.New(), chanWait)
 	if len(args) == 0 {
 		args = []any{"no element in channel"}
 	}

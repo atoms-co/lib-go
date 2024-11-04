@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"go.atoms.co/lib/clock"
 	"go.atoms.co/lib/iox"
 )
 
@@ -214,8 +215,8 @@ func Process[T any](in <-chan T, n int, fn func(t T)) {
 }
 
 // TryRead reads an element, waiting up to the given timeout, Returns false otherwise.
-func TryRead[T any](ch <-chan T, timeout time.Duration) (T, bool) {
-	timer := time.NewTimer(timeout)
+func TryRead[T any](ch <-chan T, cl clock.Clock, timeout time.Duration) (T, bool) {
+	timer := cl.NewTimer(timeout)
 	defer timer.Stop()
 
 	select {
@@ -231,8 +232,8 @@ func TryRead[T any](ch <-chan T, timeout time.Duration) (T, bool) {
 }
 
 // TryWrite writes an element, waiting up to the given timeout, Returns false otherwise.
-func TryWrite[T any](ch chan<- T, t T, timeout time.Duration) bool {
-	timer := time.NewTimer(timeout)
+func TryWrite[T any](ch chan<- T, t T, cl clock.Clock, timeout time.Duration) bool {
+	timer := cl.NewTimer(timeout)
 	defer timer.Stop()
 
 	select {
@@ -244,8 +245,8 @@ func TryWrite[T any](ch chan<- T, t T, timeout time.Duration) bool {
 }
 
 // TryDrain reads, waiting up to the given timeout. Returns true if channel is closed, false otherwise.
-func TryDrain[T any](ch <-chan T, timeout time.Duration) bool {
-	timer := time.NewTimer(timeout)
+func TryDrain[T any](ch <-chan T, cl clock.Clock, timeout time.Duration) bool {
+	timer := cl.NewTimer(timeout)
 	defer timer.Stop()
 
 	for {
