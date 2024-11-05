@@ -1,0 +1,3 @@
+module go.cloudkitchens.org/lib
+
+go 1.22.1
