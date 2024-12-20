@@ -50,6 +50,20 @@ func TestKeys(t *testing.T) {
 	})
 }
 
+func TestSortedKeys(t *testing.T) {
+	t.Run("new", func(t *testing.T) {
+		requirex.Equal(t, mapx.SortedKeys(map[string]int{"1": 1, "2": 2, "3": 3}), []string{"1", "2", "3"})
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		require.Nil(t, mapx.SortedKeys(map[string]int{}))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Nil(t, mapx.SortedKeys[string, int](nil))
+	})
+}
+
 func TestValues(t *testing.T) {
 	t.Run("new", func(t *testing.T) {
 		requirex.Equal(t, sorted(mapx.Values(map[int]string{1: "1", 2: "2", 3: "3"})), []string{"1", "2", "3"})

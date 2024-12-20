@@ -2,6 +2,11 @@
 // is expected to be subsumed by the standard library at some point.
 package mapx
 
+import (
+	"cmp"
+	"slices"
+)
+
 // New returns a map from intrinsically keyed values.
 func New[K comparable, V any](values []V, keyOf func(V) K) map[K]V {
 	ret := make(map[K]V, len(values))
@@ -41,6 +46,13 @@ func Keys[K comparable, V any](m map[K]V) []K {
 		ret = append(ret, k)
 	}
 	return ret
+}
+
+// SortedKeys extracts all keys to a slice and sorts them.
+func SortedKeys[K cmp.Ordered, V any](m map[K]V) []K {
+	keys := Keys(m)
+	slices.Sort(keys)
+	return keys
 }
 
 // Values extracts all values to a slice.
