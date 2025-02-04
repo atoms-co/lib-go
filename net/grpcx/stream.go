@@ -207,12 +207,13 @@ func ShortCircuit[A, B any](ctx context.Context, client Handler[A, B], server Ha
 
 	// (3) Forward server -> client message sync to be blocking.
 
+forward:
 	for msg := range in {
 		select {
 		case a <- msg:
 			// ok
 		case <-quit.Closed():
-			break
+			break forward
 		}
 	}
 
