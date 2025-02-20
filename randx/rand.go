@@ -26,3 +26,9 @@ func Shuffle[S ~[]E, E any](s S) {
 		s[i], s[j] = s[j], s[i]
 	})
 }
+
+// IntnRange generates an integer in range [min,max).
+// It panics if min <= 0 or min is larger than max.
+func IntnRange(min, max int) int {
+	return rand.Intn(max-min) + min
+}
