@@ -94,11 +94,7 @@ func Retry1[T1 any](b BackOff, fn func() (T1, error)) (T1, error) {
 		t1, err = fn()
 		return err
 	}, b)
-	if err != nil {
-		var nil1 T1
-		return nil1, err
-	}
-	return t1, nil
+	return t1, err
 }
 
 // Retry2 retries the given function per the backoff policy.
@@ -110,12 +106,7 @@ func Retry2[T1, T2 any](b BackOff, fn func() (T1, T2, error)) (T1, T2, error) {
 		t1, t2, err = fn()
 		return err
 	}, b)
-	if err != nil {
-		var nil1 T1
-		var nil2 T2
-		return nil1, nil2, err
-	}
-	return t1, t2, nil
+	return t1, t2, err
 }
 
 // Retry3 retries the given function per the backoff policy.
@@ -128,13 +119,7 @@ func Retry3[T1, T2, T3 any](b BackOff, fn func() (T1, T2, T3, error)) (T1, T2, T
 		t1, t2, t3, err = fn()
 		return err
 	}, b)
-	if err != nil {
-		var nil1 T1
-		var nil2 T2
-		var nil3 T3
-		return nil1, nil2, nil3, err
-	}
-	return t1, t2, t3, nil
+	return t1, t2, t3, err
 }
 
 // ErrPermanent signals a permanent error and halts the retry attempts, if returned.
