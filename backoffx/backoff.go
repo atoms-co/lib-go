@@ -87,6 +87,8 @@ func Retry(b BackOff, fn func() error) error {
 }
 
 // Retry1 retries the given function per the backoff policy.
+// Note that this method will not pass the value back if the operation returned an error: it will return
+// zero value.
 func Retry1[T1 any](b BackOff, fn func() (T1, error)) (T1, error) {
 	var t1 T1
 	var err error
@@ -94,10 +96,16 @@ func Retry1[T1 any](b BackOff, fn func() (T1, error)) (T1, error) {
 		t1, err = fn()
 		return err
 	}, b)
-	return t1, err
+	if err != nil {
+		var nil1 T1
+		return nil1, err
+	}
+	return t1, nil
 }
 
 // Retry2 retries the given function per the backoff policy.
+// Note that this method will not pass the values back if the operation returned an error: it will return
+// zero values.
 func Retry2[T1, T2 any](b BackOff, fn func() (T1, T2, error)) (T1, T2, error) {
 	var t1 T1
 	var t2 T2
@@ -106,10 +114,17 @@ func Retry2[T1, T2 any](b BackOff, fn func() (T1, T2, error)) (T1, T2, error) {
 		t1, t2, err = fn()
 		return err
 	}, b)
-	return t1, t2, err
+	if err != nil {
+		var nil1 T1
+		var nil2 T2
+		return nil1, nil2, err
+	}
+	return t1, t2, nil
 }
 
 // Retry3 retries the given function per the backoff policy.
+// Note that this method will not pass the values back if the operation returned an error: it will return
+// zero values.
 func Retry3[T1, T2, T3 any](b BackOff, fn func() (T1, T2, T3, error)) (T1, T2, T3, error) {
 	var t1 T1
 	var t2 T2
@@ -119,7 +134,13 @@ func Retry3[T1, T2, T3 any](b BackOff, fn func() (T1, T2, T3, error)) (T1, T2, T
 		t1, t2, t3, err = fn()
 		return err
 	}, b)
-	return t1, t2, t3, err
+	if err != nil {
+		var nil1 T1
+		var nil2 T2
+		var nil3 T3
+		return nil1, nil2, nil3, err
+	}
+	return t1, t2, t3, nil
 }
 
 // ErrPermanent signals a permanent error and halts the retry attempts, if returned.
