@@ -5,11 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"go.atoms.co/lib/log"
-	"go.atoms.co/lib/log/zap"
 	"github.com/stretchr/testify/assert"
 	z "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"go.atoms.co/lib/log"
+	"go.atoms.co/lib/log/zap"
 )
 
 func call() {
@@ -59,7 +60,7 @@ func TestLogger(t *testing.T) {
 
 		entry := <-entries
 		assert.Equal(t, "bar", entry.Message)
-		assert.True(t, strings.HasSuffix(entry.Caller.FullPath(), "log/zap/zap_test.go:16"))
+		assert.True(t, strings.HasSuffix(entry.Caller.FullPath(), "log/zap/zap_test.go:17"))
 	})
 
 }

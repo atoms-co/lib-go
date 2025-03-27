@@ -3,9 +3,10 @@ package zap
 import (
 	"os"
 
-	"go.atoms.co/lib/log"
 	z "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"go.atoms.co/lib/log"
 )
 
 // NewStackdriver returns a new zap-based log.Logger with Stackdriver-compatible formatting.
