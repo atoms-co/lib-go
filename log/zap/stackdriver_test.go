@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"go.cloudkitchens.org/lib/log"
-	"go.cloudkitchens.org/lib/log/zap"
 	z "go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+
+	"go.cloudkitchens.org/lib/log"
+	"go.cloudkitchens.org/lib/log/zap"
 )
 
 func callLogger(sev log.Severity, msg string) io.Reader {
@@ -50,7 +51,7 @@ func TestStackdriverCore(t *testing.T) {
 				Message:  "foo",
 				SourceLocation: sourceLocation{
 					File: "log/zap/stackdriver_test.go",
-					Line: 21,
+					Line: 22,
 				},
 			},
 		},
@@ -62,7 +63,7 @@ func TestStackdriverCore(t *testing.T) {
 				Message:  "foo",
 				SourceLocation: sourceLocation{
 					File: "log/zap/stackdriver_test.go",
-					Line: 21,
+					Line: 22,
 				},
 			},
 		},
@@ -74,7 +75,7 @@ func TestStackdriverCore(t *testing.T) {
 				Message:  "foo",
 				SourceLocation: sourceLocation{
 					File: "log/zap/stackdriver_test.go",
-					Line: 21,
+					Line: 22,
 				},
 			},
 		},
@@ -86,7 +87,7 @@ func TestStackdriverCore(t *testing.T) {
 				Message:  "foo",
 				SourceLocation: sourceLocation{
 					File: "log/zap/stackdriver_test.go",
-					Line: 21,
+					Line: 22,
 				},
 			},
 		},
@@ -98,7 +99,7 @@ func TestStackdriverCore(t *testing.T) {
 				Message:  "foo",
 				SourceLocation: sourceLocation{
 					File: "log/zap/stackdriver_test.go",
-					Line: 21,
+					Line: 22,
 				},
 			},
 		},
@@ -110,7 +111,7 @@ func TestStackdriverCore(t *testing.T) {
 				Message:  "foo",
 				SourceLocation: sourceLocation{
 					File: "log/zap/stackdriver_test.go",
-					Line: 21,
+					Line: 22,
 				},
 			},
 		},

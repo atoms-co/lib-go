@@ -3,9 +3,10 @@ package zap
 import (
 	"os"
 
-	"go.cloudkitchens.org/lib/log"
 	z "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"go.cloudkitchens.org/lib/log"
 )
 
 // NewStackdriver returns a new zap-based log.Logger with Stackdriver-compatible formatting.
