@@ -23,5 +23,5 @@ func NotEqual[T any](t *testing.T, actual, expected T, args ...any) {
 
 func EqualProtobuf(t *testing.T, actual, expected proto.Message, args ...any) {
 	t.Helper()
-	assert.Equal(t, proto.MarshalTextString(actual), proto.MarshalTextString(expected), args)
+	assert.Equal(t, proto.MarshalTextString(expected), proto.MarshalTextString(actual), args)
 }
