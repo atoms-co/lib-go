@@ -68,7 +68,7 @@ func WithQuit(quit <-chan struct{}, closer AsyncCloser) AsyncCloser {
 }
 
 // WhenClosed closes the child closer, when the parent closes
-func WhenClosed(parent, child AsyncCloser) {
+func WhenClosed(parent RAsyncCloser, child WAsyncCloser) {
 	go func() {
 		<-parent.Closed()
 		child.Close()
