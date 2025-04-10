@@ -242,6 +242,19 @@ func TestFlatten(t *testing.T) {
 	})
 }
 
+func TestContainsFunc(t *testing.T) {
+	t.Run("some", func(t *testing.T) {
+		require.True(t, mapx.ContainsFunc(map[string]int{"1": 1, "2": 2, "3": 3}, func(k string, v int) bool {
+			return k == "1" && v == 1
+		}))
+	})
+	t.Run("none", func(t *testing.T) {
+		require.False(t, mapx.ContainsFunc(map[string]int{"1": 1, "2": 2, "3": 3}, func(k string, v int) bool {
+			return k == "1" && v == 2
+		}))
+	})
+}
+
 func sorted(s []string) []string {
 	sort.Strings(s)
 	return s
