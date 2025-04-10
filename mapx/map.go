@@ -205,6 +205,16 @@ func Contains[K comparable, V any](m map[K]V, k K) bool {
 	return false
 }
 
+// ContainsFunc returns true if at least one key-value pair satisfies f(k, v).
+func ContainsFunc[K comparable, V any](m map[K]V, f func(k K, v V) bool) bool {
+	for k, v := range m {
+		if f(k, v) {
+			return true
+		}
+	}
+	return false
+}
+
 // FilterKeys returns elements with Keys matching the filter function.
 func FilterKeys[K comparable, V any](m map[K]V, fn func(K) bool) map[K]V {
 	ret := make(map[K]V)
