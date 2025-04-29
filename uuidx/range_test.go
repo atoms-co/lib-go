@@ -27,21 +27,6 @@ func TestSplit(t *testing.T) {
 	assert.Equal(t, to, ranges[len(ranges)-1].To())
 }
 
-func TestDivide(t *testing.T) {
-	middle := uuid.MustParse("80000000-0000-0000-0000-000000000000")
-
-	half, err := uuidx.Divide(1, 2)
-	assert.NoError(t, err)
-	assert.Equal(t, middle, half)
-
-	ranges, err := uuidx.Split(uuidx.Domain, 1024)
-	for i := 0; i < 1024; i++ {
-		actual, err := uuidx.Divide(int64(i), 1024)
-		assert.NoError(t, err)
-		assert.Equal(t, ranges[i].From(), actual)
-	}
-}
-
 // TestShards verifies the basic range splitting logic.
 func TestShards(t *testing.T) {
 	from := uuid.MustParse("dc9076e9-2fda-4019-bd2c-900a8284b9c4")

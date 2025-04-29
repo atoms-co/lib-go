@@ -135,19 +135,6 @@ func Split(s Range, numPartitions int) ([]Range, error) {
 	return ranges, nil
 }
 
-// Divide returns a/b * (uuid.Max+1), i.e, the UUID of the a'th of b partitions.
-func Divide(a, b int64) (uuid.UUID, error) {
-	if b <= a || b < 1 {
-		return uuid.UUID{}, fmt.Errorf("invalid")
-	}
-
-	maxValue := Domain.To()
-	end := big.NewInt(0).Add(big.NewInt(0).SetBytes(maxValue[:]), big.NewInt(1))
-	ret := big.NewInt(0).Div(big.NewInt(0).Mul(end, big.NewInt(a)), big.NewInt(b))
-
-	return uuid.FromBytes(ret.FillBytes(make([]byte, 16)))
-}
-
 // Compare compares the given UUIDs a and b. The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
 func Compare(a, b uuid.UUID) int {
 	// Note: UUID is [16]byte and bytes.Compare needs a []byte.
