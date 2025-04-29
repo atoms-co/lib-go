@@ -1,7 +1,9 @@
 package uuidx
 
 import (
+	"bytes"
 	"crypto/md5"
+	"math/big"
 
 	"github.com/google/uuid"
 )
@@ -32,4 +34,22 @@ func setUUIDRandomVersion(value []byte) {
 	value[6] = (value[6] & 0x0F) | 0x40
 	// Set variant to 2
 	value[8] = (value[8] & 0x3F) | 0x80
+}
+
+// Compare compares the given UUIDs a and b. The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
+func Compare(a, b uuid.UUID) int {
+	// Note: UUID is [16]byte and bytes.Compare needs a []byte.
+	return bytes.Compare(a[:], b[:])
+}
+
+// Less returns a < b. For convenience in sorting
+func Less(a, b uuid.UUID) bool {
+	return Compare(a, b) < 0
+}
+
+// Inc returns the next uuid
+func Inc(n uuid.UUID) uuid.UUID {
+	next := big.NewInt(0).Add(big.NewInt(0).SetBytes(n[:]), big.NewInt(1))
+	ret, _ := uuid.FromBytes(next.FillBytes(make([]byte, 16)))
+	return ret
 }

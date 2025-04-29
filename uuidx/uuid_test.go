@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 
 	"go.atoms.co/lib/testing/requirex"
 	"go.atoms.co/lib/uuidx"
@@ -36,4 +37,9 @@ func TestHash(t *testing.T) {
 	a := uuid.MustParse("dc9076e9-2fda-4019-bd2c-900a8284b9c5")
 	u = uuidx.Hash(a[:])
 	requirex.Equal(t, u.String(), "e5c8ce1b-7ccf-4154-a779-064e8b483edd")
+}
+
+func TestInc(t *testing.T) {
+	id := uuid.MustParse("ef8076e9-2fda-4019-bd2c-900a8284b9c4")
+	assert.Equal(t, uuidx.Inc(id).String(), "ef8076e9-2fda-4019-bd2c-900a8284b9c5")
 }
