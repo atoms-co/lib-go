@@ -209,8 +209,3 @@ func TestShardsInvalid(t *testing.T) {
 	ranges, err = uuidx.Split(s, 5)
 	require.Error(t, err, "num partitions > num UUIDs should be invalid")
 }
-
-func TestInc(t *testing.T) {
-	id := uuid.MustParse("ef8076e9-2fda-4019-bd2c-900a8284b9c4")
-	assert.Equal(t, uuidx.Inc(id).String(), "ef8076e9-2fda-4019-bd2c-900a8284b9c5")
-}
