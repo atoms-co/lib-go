@@ -33,7 +33,12 @@ func NewRange(from, to uuid.UUID) (Range, error) {
 	}, nil
 }
 
+// MustNewRange returns a shard from the given from and to UUID. Panics if range is invalid.
 func MustNewRange(from, to uuid.UUID) Range {
+	if Compare(from, to) >= 0 {
+		panic(fmt.Errorf("range start UUID must be less than the end UUID, got %v >= %v", from, to))
+	}
+
 	return Range{
 		from: from,
 		to:   to,
