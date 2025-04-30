@@ -24,7 +24,7 @@ type Range struct {
 // NewRange returns a shard from the given from and to UUID.
 func NewRange(from, to uuid.UUID) (Range, error) {
 	if Compare(from, to) >= 0 {
-		return Range{}, fmt.Errorf("range start UUID must be less than the end UUID")
+		return Range{}, fmt.Errorf("range start UUID must be less than the end UUID, got %v >= %v", from, to)
 	}
 
 	return Range{
