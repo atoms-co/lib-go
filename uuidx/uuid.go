@@ -53,3 +53,7 @@ func Inc(n uuid.UUID) uuid.UUID {
 	ret, _ := uuid.FromBytes(next.FillBytes(make([]byte, 16)))
 	return ret
 }
+
+func Equal(a, b uuid.UUID) bool {
+	return Compare(a, b) == 0
+}
