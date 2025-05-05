@@ -43,3 +43,32 @@ func TestInc(t *testing.T) {
 	id := uuid.MustParse("ef8076e9-2fda-4019-bd2c-900a8284b9c4")
 	assert.Equal(t, uuidx.Inc(id).String(), "ef8076e9-2fda-4019-bd2c-900a8284b9c5")
 }
+
+func TestEqual(t *testing.T) {
+	testCases := []struct {
+		name     string
+		a        uuid.UUID
+		b        uuid.UUID
+		expected bool
+	}{
+		{
+			name:     "Equal UUIDs",
+			a:        uuid.MustParse("10000000-0000-0000-0000-000000000000"),
+			b:        uuid.MustParse("10000000-0000-0000-0000-000000000000"),
+			expected: true,
+		},
+		{
+			name:     "Different UUIDs",
+			a:        uuid.MustParse("10000000-0000-0000-0000-000000000000"),
+			b:        uuid.MustParse("20000000-0000-0000-0000-000000000000"),
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := uuidx.Equal(tc.a, tc.b)
+			requirex.Equal(t, tc.expected, result)
+		})
+	}
+}
