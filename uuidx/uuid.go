@@ -37,13 +37,13 @@ func setUUIDRandomVersion(value []byte) {
 }
 
 // Compare compares the given UUIDs a and b. The result will be 0 if a==b, -1 if a < b, and +1 if a > b.
-func Compare(a, b uuid.UUID) int {
+func Compare[T ~[16]byte](a, b T) int {
 	// Note: UUID is [16]byte and bytes.Compare needs a []byte.
 	return bytes.Compare(a[:], b[:])
 }
 
 // Less returns a < b. For convenience in sorting
-func Less(a, b uuid.UUID) bool {
+func Less[T ~[16]byte](a, b T) bool {
 	return Compare(a, b) < 0
 }
 
@@ -54,6 +54,6 @@ func Inc(n uuid.UUID) uuid.UUID {
 	return ret
 }
 
-func Equal(a, b uuid.UUID) bool {
+func Equal[T ~[16]byte](a, b T) bool {
 	return Compare(a, b) == 0
 }
