@@ -51,21 +51,38 @@ func Guard0(ctx context.Context, m *Mutex, fn func() error) error {
 
 // Guard1 runs the given function in a critical section protected by the mutex. Context cancelable.
 func Guard1[T any](ctx context.Context, m *Mutex, fn func() (T, error)) (T, error) {
-	if contextx.IsCancelled(ctx) {
-		var zero T
-		return zero, ctx.Err()
+	if !contextx.IsCancelled(ctx) {
+		select {
+		case <-m.Lock():
+			defer m.Unlock()
+
+			return fn()
+
+		case <-ctx.Done():
+		}
 	}
 
-	select {
-	case <-m.Lock():
-		defer m.Unlock()
+	var zero T
+	return zero, ctx.Err()
+}
 
-		return fn()
+// Guard2 runs the given function in a critical section protected by the mutex. Context cancelable.
+func Guard2[T1, T2 any](ctx context.Context, m *Mutex, fn func() (T1, T2, error)) (T1, T2, error) {
+	if !contextx.IsCancelled(ctx) {
+		select {
+		case <-m.Lock():
+			defer m.Unlock()
 
-	case <-ctx.Done():
-		var zero T
-		return zero, ctx.Err()
+			return fn()
+
+		case <-ctx.Done():
+		}
 	}
+
+	var zero1 T1
+	var zero2 T2
+	return zero1, zero2, ctx.Err()
+
 }
 
 // MutexMap creates mutexes on demand for a given key.
