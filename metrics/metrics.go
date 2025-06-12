@@ -18,7 +18,7 @@ const (
 	Exponential Distribution = iota
 	Uniform
 	UserDefined
-	version = "1.0.0"
+	version = "1.0.1"
 )
 
 type UnitType string
@@ -166,6 +166,9 @@ func Init(appName string) error {
 	if err != nil {
 		return err
 	}
+
+	// register extra views for gRPC metrics
+	view.Register(ocgrpc.ClientStartedRPCsView, ocgrpc.ServerStartedRPCsView)
 
 	return runmetrics.Enable(runmetrics.RunMetricOptions{
 		EnableCPU:            true,
