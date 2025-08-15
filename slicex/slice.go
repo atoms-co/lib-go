@@ -150,3 +150,13 @@ func NewSet[T comparable](keys ...T) map[T]bool {
 	}
 	return m
 }
+
+// GroupBy groups elements by the key returned by the function.
+func GroupBy[T any, K comparable](list []T, fn func(T) K) map[K][]T {
+	m := make(map[K][]T)
+	for _, v := range list {
+		k := fn(v)
+		m[k] = append(m[k], v)
+	}
+	return m
+}

@@ -281,3 +281,28 @@ func TestSet(t *testing.T) {
 		require.Equal(t, slicex.NewSet(1, 2, 3, 3, 5), map[int]bool{1: true, 2: true, 3: true, 5: true})
 	})
 }
+
+func TestGroupBy(t *testing.T) {
+	t.Run("nil", func(t *testing.T) {
+		require.Empty(t, slicex.GroupBy(nil, func(n int) string {
+			return strconv.Itoa(n % 2)
+		}))
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		require.Empty(t, slicex.GroupBy([]int{}, func(n int) string {
+			return strconv.Itoa(n % 2)
+		}))
+	})
+
+	t.Run("nonempty", func(t *testing.T) {
+		groups := slicex.GroupBy([]int{1, 2, 3, 4, 5}, func(n int) string {
+			if n%2 == 0 {
+				return "even"
+			} else {
+				return "odd"
+			}
+		})
+		require.Equal(t, groups, map[string][]int{"odd": {1, 3, 5}, "even": {2, 4}})
+	})
+}
