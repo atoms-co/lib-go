@@ -196,6 +196,24 @@ func Flatten[K comparable, V any](m map[K][]V) []V {
 	return ret
 }
 
+// FlattenMap extracts all value elements of a multi-map to a single slice with a transformation.
+func FlattenMap[K comparable, V, T any](m map[K][]V, f func(v V) T) []T {
+	if len(m) == 0 {
+		return nil
+	}
+	size := 0
+	for _, v := range m {
+		size += len(v)
+	}
+	ret := make([]T, 0, size)
+	for _, vals := range m {
+		for _, v := range vals {
+			ret = append(ret, f(v))
+		}
+	}
+	return ret
+}
+
 // Contains returns true if the given key is in the map.
 func Contains[K comparable, V any](m map[K]V, k K) bool {
 	if m != nil {

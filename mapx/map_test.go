@@ -242,6 +242,22 @@ func TestFlatten(t *testing.T) {
 	})
 }
 
+func TestFlattenMap(t *testing.T) {
+	fn := func(v int) string { return fmt.Sprintf("%v", v) }
+
+	t.Run("some", func(t *testing.T) {
+		requirex.Equal(t, sorted(mapx.FlattenMap(map[int][]int{1: {11, 12}, 3: {31}}, fn)), []string{"11", "12", "31"})
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		require.Empty(t, mapx.FlattenMap(map[int][]int{}, fn))
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		require.Empty(t, mapx.FlattenMap[int, int, string](nil, fn))
+	})
+}
+
 func TestContainsFunc(t *testing.T) {
 	t.Run("some", func(t *testing.T) {
 		require.True(t, mapx.ContainsFunc(map[string]int{"1": 1, "2": 2, "3": 3}, func(k string, v int) bool {
