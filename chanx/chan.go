@@ -244,6 +244,17 @@ func TryWrite[T any](ch chan<- T, t T, cl clock.Clock, timeout time.Duration) bo
 	}
 }
 
+// TryWriteWithCloser writes an element, waiting until either to write succeeds or the closer is closed.
+// Returns false if the closer is closed before write succeeds.
+func TryWriteWithCloser[T any](closer iox.RAsyncCloser, ch chan<- T, t T) bool {
+	select {
+	case ch <- t:
+		return true
+	case <-closer.Closed():
+		return false
+	}
+}
+
 // TryDrain reads, waiting up to the given timeout. Returns true if channel is closed, false otherwise.
 func TryDrain[T any](ch <-chan T, cl clock.Clock, timeout time.Duration) bool {
 	timer := cl.NewTimer(timeout)
