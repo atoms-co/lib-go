@@ -152,3 +152,16 @@ func TestBreaker(t *testing.T) {
 		assertx.NoElement(t, out) // No room in buffer for 4
 	})
 }
+
+func TestTryWriteWithCloser(t *testing.T) {
+	c := iox.NewAsyncCloser()
+	ch := make(chan int, 2)
+	defer close(ch)
+	r := chanx.TryWriteWithCloser(c, ch, 1)
+	assertx.Equal(t, r, true)
+
+	c.Close()
+	<-c.Closed()
+	r = chanx.TryWriteWithCloser(c, ch, 2)
+	assertx.Equal(t, r, false)
+}
