@@ -1,0 +1,51 @@
+package protox
+
+import (
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoimpl"
+)
+
+// Unmarshal is a generic, direct-style wrapper for proto.Unmarshal that returns the message value directly.
+//
+// Type Parameters:
+//
+//	M - the concrete protobuf message type
+//	T - an interface to satisfy type system, should not be provided
+//
+// This function differs from the standard proto.Unmarshal in that it does not require the caller to provide a pointer
+// to the message. Instead, it creates a new instance of the message type, unmarshals the data into it, and returns
+// a pointer to the message.
+//
+// Example usage:
+//
+//	msg, err := protox.Unmarshal[com.example.v1.MyMessage](data)
+//	// msg is of type *com.example.v1.MyMessage
+func Unmarshal[M any, T interface {
+	*M
+	proto.Message
+}](buf []byte) (M, error) {
+	ret := new(M)
+	if err := proto.Unmarshal(buf, protoimpl.X.ProtoMessageV2Of(ret)); err != nil {
+		return *ret, err
+	}
+	return *ret, nil
+}
+
+// CompactTextString returns a compact, single-line text representation of the given proto.Message.
+// This format omits unnecessary whitespace and is suitable for logging or debugging where space is a concern.
+func CompactTextString(m proto.Message) string {
+	return prototext.MarshalOptions{}.Format(m)
+}
+
+// MarshalTextString returns a multiline, human-readable text representation of the given proto.Message.
+// This format includes indentation and line breaks, making it easier to read for humans.
+func MarshalTextString(m proto.Message) string {
+	return prototext.Format(m)
+}
+
+// Clone returns a deep copy of m. If the top-level message is invalid,
+// it returns an invalid message as well.
+func Clone[M proto.Message](m M) M {
+	return proto.CloneOf(m)
+}
