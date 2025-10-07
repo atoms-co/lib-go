@@ -39,9 +39,16 @@ func TestHash(t *testing.T) {
 	requirex.Equal(t, u.String(), "e5c8ce1b-7ccf-4154-a779-064e8b483edd")
 }
 
+type entityId uuid.UUID
+
 func TestInc(t *testing.T) {
 	id := uuid.MustParse("ef8076e9-2fda-4019-bd2c-900a8284b9c4")
 	assert.Equal(t, uuidx.Inc(id).String(), "ef8076e9-2fda-4019-bd2c-900a8284b9c5")
+
+	myId := entityId(uuid.MustParse("ef8076e9-2fda-4019-bd2c-900a8284b9c4"))
+	myIdInc := entityId(uuid.MustParse("ef8076e9-2fda-4019-bd2c-900a8284b9c5"))
+	assert.Equal(t, uuidx.Inc(myId), myIdInc)
+	assert.Equal(t, entityId(uuidx.Inc(uuid.UUID(myId))), myIdInc)
 }
 
 func TestEqual(t *testing.T) {

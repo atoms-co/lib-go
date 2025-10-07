@@ -48,10 +48,10 @@ func Less[T ~[16]byte](a, b T) bool {
 }
 
 // Inc returns the next uuid
-func Inc(n uuid.UUID) uuid.UUID {
+func Inc[T ~[16]byte](n T) T {
 	next := big.NewInt(0).Add(big.NewInt(0).SetBytes(n[:]), big.NewInt(1))
 	ret, _ := uuid.FromBytes(next.FillBytes(make([]byte, 16)))
-	return ret
+	return T(ret)
 }
 
 func Equal[T ~[16]byte](a, b T) bool {
