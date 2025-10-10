@@ -247,6 +247,10 @@ func TryWrite[T any](ch chan<- T, t T, cl clock.Clock, timeout time.Duration) bo
 // TryWriteWithCloser writes an element, waiting until either to write succeeds or the closer is closed.
 // Returns false if the closer is closed before write succeeds.
 func TryWriteWithCloser[T any](closer iox.RAsyncCloser, ch chan<- T, t T) bool {
+	if closer.IsClosed() {
+		return false
+	}
+
 	select {
 	case ch <- t:
 		return true
