@@ -24,12 +24,12 @@ import (
 func Unmarshal[M any, T interface {
 	*M
 	proto.Message
-}](buf []byte) (M, error) {
+}](buf []byte) (*M, error) {
 	ret := new(M)
 	if err := proto.Unmarshal(buf, protoimpl.X.ProtoMessageV2Of(ret)); err != nil {
-		return *ret, err
+		return nil, err
 	}
-	return *ret, nil
+	return ret, nil
 }
 
 // CompactTextString returns a compact, single-line text representation of the given proto.Message.
