@@ -20,7 +20,8 @@ func TestUnmarshal(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ts, err := protox.Unmarshal[timestamppb.Timestamp](buf)
+	var ts *timestamppb.Timestamp
+	ts, err = protox.Unmarshal[timestamppb.Timestamp](buf)
 	require.NoError(t, err)
 	requirex.Equal(t, ts.Seconds, 123)
 	requirex.Equal(t, ts.Nanos, 456)
