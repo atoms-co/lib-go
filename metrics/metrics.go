@@ -77,11 +77,27 @@ var (
 // Key is a metric tag key.
 type Key string
 
+// Commonly-used metric key names
+const (
+	ActionKey      Key = "action"
+	MethodKey      Key = "method"
+	MessageTypeKey Key = "message_type"
+	ResultKey      Key = "result"
+	SegmentKey     Key = "segment"
+	StatusKey      Key = "status"
+	TableKey       Key = "table"
+	TypeKey        Key = "type"
+)
+
 // Tag represents the metric tag with a key and a value.
 // Example tag: Tag{Key: "serviceName", Value: "fooService"}
 type Tag struct {
 	Key   Key
 	Value string
+}
+
+func NewTag(key Key, value any) Tag {
+	return Tag{Key: key, Value: fmt.Sprintf("%v", value)}
 }
 
 func (t Tag) String() string {
