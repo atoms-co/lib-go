@@ -49,3 +49,16 @@ func MarshalTextString(m proto.Message) string {
 func Clone[M proto.Message](m M) M {
 	return proto.Clone(m).(M)
 }
+
+// EqualList compares two message slices with proto.Equal. Convenience method.
+func EqualList[M proto.Message](a, b []M) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		if !proto.Equal(a[i], b[i]) {
+			return false
+		}
+	}
+	return true
+}
