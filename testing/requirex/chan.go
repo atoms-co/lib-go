@@ -30,7 +30,7 @@ func ChanNonEmpty[T any](t *testing.T, c <-chan T) {
 func Element[T any](t *testing.T, ch <-chan T, args ...any) T {
 	t.Helper()
 
-	elm, ok := chanx.TryRead(ch, clock.New(), chanWait)
+	elm, ok := chanx.TryRead(ch, chanWait)
 	if len(args) == 0 {
 		args = []any{"no element in channel"}
 	}

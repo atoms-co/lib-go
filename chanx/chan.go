@@ -215,8 +215,8 @@ func Process[T any](in <-chan T, n int, fn func(t T)) {
 }
 
 // TryRead reads an element, waiting up to the given timeout, Returns false otherwise.
-func TryRead[T any](ch <-chan T, cl clock.Clock, timeout time.Duration) (T, bool) {
-	timer := cl.NewTimer(timeout)
+func TryRead[T any](ch <-chan T, timeout time.Duration) (T, bool) {
+	timer := time.NewTimer(timeout)
 	defer timer.Stop()
 
 	select {
