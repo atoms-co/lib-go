@@ -1,7 +1,9 @@
 // Package mathx contains various math utilities.
 package mathx
 
-import "golang.org/x/exp/constraints"
+import (
+	"cmp"
+)
 
 // MinInt returns the smallest of the given numbers.
 // Deprecated: use built-in min
@@ -17,13 +19,13 @@ func MaxInt(a, b int) int {
 
 // Min returns the smallest of the given numbers.
 // Deprecated: use built-in min
-func Min[T constraints.Ordered](a, b T) T {
+func Min[T cmp.Ordered](a, b T) T {
 	return min(a, b)
 }
 
 // Max returns the largest of the given numbers.
 // Deprecated: use built-in max
-func Max[T constraints.Ordered](a, b T) T {
+func Max[T cmp.Ordered](a, b T) T {
 	return max(a, b)
 }
 
