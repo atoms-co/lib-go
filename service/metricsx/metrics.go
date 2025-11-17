@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	opencensusexporter "contrib.go.opencensus.io/exporter/prometheus"
-	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	otelexporter "go.opentelemetry.io/otel/exporters/prometheus"
@@ -34,9 +33,9 @@ func Init(ctx context.Context, application string) {
 		log.Exitf(ctx, "Failed to create Prometheus exporter: %v", err)
 	}
 
-	r := mux.NewRouter()
-	r.Handle("/metrics", pe)
-	srv = &http.Server{Addr: fmt.Sprintf(":%v", *port), Handler: r}
+	m := http.NewServeMux()
+	m.HandleFunc("/metrics", pe.ServeHTTP)
+	srv = &http.Server{Addr: fmt.Sprintf(":%v", *port), Handler: m}
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf(ctx, "Metrics server exited unexpectedly: %v", err)
