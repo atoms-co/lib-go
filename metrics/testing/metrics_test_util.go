@@ -1,4 +1,4 @@
-package metrics_testing
+package testing
 
 import (
 	"fmt"

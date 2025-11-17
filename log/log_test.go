@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"go.atoms.co/lib/log"
-	log_testing "go.atoms.co/lib/log/testing"
+	logtesting "go.atoms.co/lib/log/testing"
 )
 
 // TestNonFatal validates that non-fatal user-facing logging functions call the backend as expected.
 func TestNonFatal(t *testing.T) {
 	ctx := context.Background()
-	rec := log_testing.TestRecorder{}
+	rec := logtesting.TestRecorder{}
 	log.SetLogger(&rec)
 
 	tests := []struct {
@@ -53,7 +53,7 @@ func TestNonFatal(t *testing.T) {
 // TestFatal validates that the Fatal user-facing logging functions call the backend as expected and then panics.
 func TestFatal(t *testing.T) {
 	ctx := context.Background()
-	rec := log_testing.TestRecorder{}
+	rec := logtesting.TestRecorder{}
 	log.SetLogger(&rec)
 
 	tests := []struct {

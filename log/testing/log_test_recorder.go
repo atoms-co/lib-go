@@ -1,4 +1,4 @@
-package log_testing
+package testing
 
 import (
 	"context"
