@@ -32,6 +32,11 @@ func Unmarshal[M any, T interface {
 	return ret, nil
 }
 
+// Marshal returns the wire-format encoding of m.
+func Marshal(m proto.Message) ([]byte, error) {
+	return proto.Marshal(m)
+}
+
 // CompactTextString returns a compact, single-line text representation of the given proto.Message.
 // This format omits unnecessary whitespace and is suitable for logging or debugging where space is a concern.
 func CompactTextString(m proto.Message) string {
@@ -48,6 +53,12 @@ func MarshalTextString(m proto.Message) string {
 // it returns an invalid message as well.
 func Clone[M proto.Message](m M) M {
 	return proto.Clone(m).(M)
+}
+
+// Equal reports whether two messages are equal,
+// by recursively comparing the fields of the message.
+func Equal(x, y proto.Message) bool {
+	return proto.Equal(x, y)
 }
 
 // EqualList compares two message slices with proto.Equal. Convenience method.
