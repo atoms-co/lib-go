@@ -260,8 +260,8 @@ func TryWriteWithCloser[T any](closer iox.RAsyncCloser, ch chan<- T, t T) bool {
 }
 
 // TryDrain reads, waiting up to the given timeout. Returns true if channel is closed, false otherwise.
-func TryDrain[T any](ch <-chan T, cl clock.Clock, timeout time.Duration) bool {
-	timer := cl.NewTimer(timeout)
+func TryDrain[T any](ch <-chan T, timeout time.Duration) bool {
+	timer := time.NewTimer(timeout)
 	defer timer.Stop()
 
 	for {
