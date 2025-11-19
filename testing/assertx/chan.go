@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"go.cloudkitchens.org/lib/clock"
 	"go.cloudkitchens.org/lib/chanx"
 )
 
@@ -35,7 +34,7 @@ func NoElement[T any](t *testing.T, ch <-chan T, args ...any) {
 func Closed[T any](t *testing.T, ch <-chan T, args ...any) {
 	t.Helper()
 
-	ok := chanx.TryDrain(ch, clock.New(), chanWait)
+	ok := chanx.TryDrain(ch, chanWait)
 	assert.True(t, ok, append([]any{"channel not closed:"}, args...))
 }
 
