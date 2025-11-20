@@ -49,7 +49,7 @@ func Dial64(ctx context.Context, endpoint string, timeout time.Duration, opts ..
 	return Dial(ctx, endpoint, timeout, append([]grpc.DialOption{WithMaxMessageSize(MaxMessageSize)}, opts...)...)
 }
 
-// DialNonBlocking64 makes a non-blocking grpc dial with a timeout, tracing and 64mb limit.
+// DialNonBlocking64 makes a non-blocking grpc dial with tracing and 64mb limit (no timeout).
 func DialNonBlocking64(ctx context.Context, endpoint string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	return DialNonBlocking(ctx, endpoint, append([]grpc.DialOption{WithMaxMessageSize(MaxMessageSize)}, opts...)...)
 }
