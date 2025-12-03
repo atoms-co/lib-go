@@ -3,7 +3,6 @@ package grpcx
 import (
 	"context"
 	"sync/atomic"
-	"time"
 
 	"google.golang.org/grpc"
 
@@ -14,12 +13,8 @@ import (
 )
 
 const (
-	// bufChanSize is the interal buffer size for streaming handler utilities.
+	// bufChanSize is the internal buffer size for streaming handler utilities.
 	bufChanSize = 20
-	// contextCancelDelay is the delay on cancelling the gRPC context when a user initiates a cancel.
-	// This gives time for messages to flush properly.
-	// TODO(jhhurwitz): 12/21/24 A more elegant solution to this problem
-	contextCancelDelay = 100 * time.Millisecond
 )
 
 // Handler is a low-level bidirectional protobuf message handler. Connection closure is realized as a chan closure
