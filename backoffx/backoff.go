@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-
-	"go.atoms.co/lib/clock"
 )
 
 type BackOff = backoff.BackOff
@@ -20,7 +18,7 @@ type Option struct {
 }
 
 // WithClock uses the provided clock for backoff. Default: system clock.
-func WithClock(c clock.Clock) Option {
+func WithClock(c backoff.Clock) Option {
 	return Option{fn: func(b *backoff.ExponentialBackOff) {
 		b.Clock = c
 	}}
