@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"go.cloudkitchens.org/lib/clock"
 	"go.cloudkitchens.org/lib/iox"
 )
 
@@ -232,8 +231,8 @@ func TryRead[T any](ch <-chan T, timeout time.Duration) (T, bool) {
 }
 
 // TryWrite writes an element, waiting up to the given timeout, Returns false otherwise.
-func TryWrite[T any](ch chan<- T, t T, cl clock.Clock, timeout time.Duration) bool {
-	timer := cl.NewTimer(timeout)
+func TryWrite[T any](ch chan<- T, t T, timeout time.Duration) bool {
+	timer := time.NewTimer(timeout)
 	defer timer.Stop()
 
 	select {
