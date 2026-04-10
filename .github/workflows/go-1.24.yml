@@ -10,7 +10,7 @@ on:
 
 jobs:
 
-  build:
+  build-go-1_24:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -18,10 +18,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.25.9'
+        go-version: '1.24.9'
 
     - name: Build
-      run: go build -v ./...
+      run: GOEXPERIMENT=synctest go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: GOEXPERIMENT=synctest go test -v ./...
