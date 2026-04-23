@@ -3,7 +3,16 @@
 package synctestx
 
 import (
+	"testing"
 	"testing/synctest"
 )
 
-var Run = synctest.Test
+// Run executes a test in synctest context
+func Run(t *testing.T, name string, f func(t *testing.T)) {
+	t.Helper()
+	t.Run(name, func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			f(t)
+		})
+	})
+}
