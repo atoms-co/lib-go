@@ -6,10 +6,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	"go.atoms.co/lib/log"
+	"go.atoms.co/iox"
 	"go.atoms.co/lib/chanx"
 	"go.atoms.co/lib/contextx"
-	"go.atoms.co/lib/iox"
+	"go.atoms.co/lib/log"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"go.atoms.co/lib/iox"
+	"go.atoms.co/iox"
 )
 
 // InterruptChan returns a channel that receives a signal when the process receives either syscall.SIGTERM or syscall.SIGINT

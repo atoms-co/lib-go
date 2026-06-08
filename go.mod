@@ -1,6 +1,6 @@
 module go.atoms.co/lib
 
-go 1.24.9
+go 1.24.11
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.1
@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.11.1
+	go.atoms.co/iox v1.0.0
 	go.atoms.co/slicex v1.1.0
 	go.opencensus.io v0.24.0
 	go.opentelemetry.io/otel v1.32.0
