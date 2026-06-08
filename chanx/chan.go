@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"go.atoms.co/lib/iox"
+	"go.atoms.co/iox"
 )
 
 // NewFixed returns a new closed chan with the given elements.

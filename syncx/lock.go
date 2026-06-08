@@ -3,7 +3,7 @@ package syncx
 import (
 	"sync/atomic"
 
-	"go.atoms.co/lib/iox"
+	"go.atoms.co/iox"
 )
 
 // Lock is a chan-based closeable semaphore with N concurrent locks granted. If N=1, it acts as a mutex.

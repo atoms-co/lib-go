@@ -18,7 +18,6 @@ const (
 	Exponential Distribution = iota
 	Uniform
 	UserDefined
-	version = "1.0.1"
 )
 
 type UnitType string
@@ -176,7 +175,6 @@ func NewSingleViewCounter(name Name, description string, tagKeys ...Key) Counter
 func Init(appName string) error {
 	// set the default app value for all metrics.
 	initAppName(appName)
-
 
 	err := view.Register(ocgrpc.DefaultServerViews...)
 	if err != nil {

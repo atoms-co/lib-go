@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"go.atoms.co/lib/iox"
+	"go.atoms.co/iox"
 	"go.atoms.co/lib/syncx"
 )
 
