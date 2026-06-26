@@ -55,7 +55,6 @@ func Size(m proto.Message) int {
 	return proto.Size(m)
 }
 
-
 // Clone returns a deep copy of m. If the top-level message is invalid,
 // it returns an invalid message as well.
 func Clone[M proto.Message](m M) M {
