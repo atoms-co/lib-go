@@ -50,7 +50,6 @@ func MarshalTextString(m proto.Message) string {
 }
 
 // Size returns the size in bytes of the wire-format encoding of m.
-// It is a wrapper of proto.Size()
 func Size(m proto.Message) int {
 	return proto.Size(m)
 }
