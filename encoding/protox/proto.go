@@ -49,6 +49,11 @@ func MarshalTextString(m proto.Message) string {
 	return prototext.Format(m)
 }
 
+// Size returns the size in bytes of the wire-format encoding of m.
+func Size(m proto.Message) int {
+	return proto.Size(m)
+}
+
 // Clone returns a deep copy of m. If the top-level message is invalid,
 // it returns an invalid message as well.
 func Clone[M proto.Message](m M) M {
