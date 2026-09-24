@@ -5,11 +5,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"go.opencensus.io/plugin/ocgrpc"
-	"go.opencensus.io/plugin/runmetrics"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
 )
 
 type Distribution int
@@ -23,10 +18,10 @@ const (
 type UnitType string
 
 const (
-	UnitDimensionless UnitType = stats.UnitDimensionless
-	UnitBytes         UnitType = stats.UnitBytes
-	UnitMilliseconds  UnitType = stats.UnitMilliseconds
-	UnitSeconds       UnitType = stats.UnitSeconds
+	UnitDimensionless UnitType = "1"
+	UnitBytes         UnitType = "By"
+	UnitMilliseconds  UnitType = "ms"
+	UnitSeconds       UnitType = "s"
 )
 
 // Name is the name of the metric.
@@ -76,18 +71,6 @@ var (
 // Key is a metric tag key.
 type Key string
 
-// Commonly-used metric key names
-const (
-	ActionKey      Key = "action"
-	MethodKey      Key = "method"
-	MessageTypeKey Key = "message_type"
-	ResultKey      Key = "result"
-	SegmentKey     Key = "segment"
-	StatusKey      Key = "status"
-	TableKey       Key = "table"
-	TypeKey        Key = "type"
-)
-
 // Tag represents the metric tag with a key and a value.
 // Example tag: Tag{Key: "serviceName", Value: "fooService"}
 type Tag struct {
@@ -129,37 +112,40 @@ type GenericHistogram[T float64 | time.Duration] interface {
 	Observe(ctx context.Context, value T, tags ...Tag)
 }
 
-// Histogram sets a duration value for appropriate histogram.
-type Histogram = GenericHistogram[time.Duration]
+// Histogram sets a duration value for appropriate histogram. It embeds rather than
+// aliases GenericHistogram so mockgen sees a plain, non-generic method set.
+type Histogram interface {
+	GenericHistogram[time.Duration]
+}
 
 // NewCounter instantiates a counter type for the given metric name, description with
 // the given metric tag keys, if any.
 func NewCounter(name Name, description string, tagKeys ...Key) Counter {
-	return newCounter(name, description, tagKeys)
+	return newOTelCounter(otelMeter, name, description, tagKeys)
 }
 
 // NewGauge instantiates a gauge type for the given metric name, description with
 // the given metric tag keys, if any.
 func NewGauge(name Name, description string, tagKeys ...Key) Gauge {
-	return newGauge(name, description, tagKeys)
+	return newOTelGauge(otelMeter, name, description, tagKeys)
 }
 
 // NewHistogram instantiates a histogram with duration values for the given metric name, description and
 // options which can be used to specify the bucket boundaries and the metric tag keys, if any.
 func NewHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys ...Key) Histogram {
-	return newDurationHistogram(name, description, bucketOptions, tagKeys)
+	return newOTelDurationHistogram(otelMeter, name, description, bucketOptions, tagKeys)
 }
 
 // NewDimensionlessHistogram instantiates a histogram with float values for the given metric name, description and
 // options which can be used to specify the bucket boundaries and the metric tag keys, if any.
 func NewDimensionlessHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys ...Key) GenericHistogram[float64] {
-	return newHistogram(name, description, UnitDimensionless, bucketOptions, tagKeys)
+	return newOTelFloatHistogram(otelMeter, name, description, UnitDimensionless, bucketOptions, tagKeys)
 }
 
 // NewByteHistogram instantiates a histogram with byte values for the given metric name, description and
 // options which can be used to specify the bucket boundaries and the metric tag keys, if any.
 func NewByteHistogram(name Name, description string, bucketOptions *BucketOptions, tagKeys ...Key) GenericHistogram[float64] {
-	return newHistogram(name, description, UnitBytes, bucketOptions, tagKeys)
+	return newOTelFloatHistogram(otelMeter, name, description, UnitBytes, bucketOptions, tagKeys)
 }
 
 // NewSingleViewCounter instantiates a counter type for the given metrics name, description with
@@ -169,24 +155,12 @@ func NewByteHistogram(name Name, description string, bucketOptions *BucketOption
 // Use NewSingleViewCounter if there's a Java counterpart producing counter metric with the same name
 // and it's important for metric names to match. In other cases, prefer NewCounter.
 func NewSingleViewCounter(name Name, description string, tagKeys ...Key) Counter {
-	return newSingleViewCounter(name, description, tagKeys)
+	return newOTelSingleViewCounter(otelMeter, name, description, tagKeys)
 }
 
+// Init initializes the basic gRPC and runtime metrics.
 func Init(appName string) error {
 	// set the default app value for all metrics.
 	initAppName(appName)
-
-	err := view.Register(ocgrpc.DefaultServerViews...)
-	if err != nil {
-		return err
-	}
-
-	// register extra views for gRPC metrics
-	view.Register(ocgrpc.ClientStartedRPCsView, ocgrpc.ServerStartedRPCsView)
-
-	return runmetrics.Enable(runmetrics.RunMetricOptions{
-		EnableCPU:            true,
-		EnableMemory:         true,
-		UseDerivedCumulative: true,
-	})
+	return enableOTelRuntimeMetrics()
 }
