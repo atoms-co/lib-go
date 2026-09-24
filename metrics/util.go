@@ -54,7 +54,7 @@ func isPrefix(tags, used []Tag) bool {
 	if len(used) < len(tags) {
 		return false
 	}
-	for i := 0; i < len(tags); i++ {
+	for i := range tags {
 		if tags[i] != used[i] {
 			return false
 		}
