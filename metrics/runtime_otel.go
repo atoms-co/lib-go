@@ -3,7 +3,9 @@ package metrics
 import (
 	"context"
 	"fmt"
+	"math"
 	"runtime"
+	rtmetrics "runtime/metrics"
 	"sync"
 	"time"
 
@@ -11,22 +13,193 @@ import (
 )
 
 // runtimeSnapshot is the single runtime sample used for one OTel collection.
+//
+// The values mirror the runtime.MemStats fields the legacy metrics exported,
+// but are read through runtime/metrics. runtime.ReadMemStats stops the world
+// on every call, which stalled all goroutines on every /metrics scrape;
+// runtime/metrics.Read does not.
 type runtimeSnapshot struct {
-	memStats     runtime.MemStats
-	numGoroutine int64
-	numCgoCall   int64
+	totalAlloc    uint64
+	sys           uint64
+	mallocs       uint64
+	frees         uint64
+	heapAlloc     uint64
+	heapSys       uint64
+	heapIdle      uint64
+	heapInuse     uint64
+	heapReleased  uint64
+	heapObjects   uint64
+	stackInuse    uint64
+	stackSys      uint64
+	mSpanInuse    uint64
+	mSpanSys      uint64
+	mCacheInuse   uint64
+	mCacheSys     uint64
+	gcSys         uint64
+	otherSys      uint64
+	numGC         uint64
+	numForcedGC   uint64
+	nextGC        uint64
+	pauseTotal    time.Duration
+	gcCPUFraction float64
+	numGoroutine  int64
+	numCgoCall    int64
 }
 
 type runtimeSnapshotReader func() runtimeSnapshot
 
+// runtime/metrics names read for each snapshot. See
+// https://pkg.go.dev/runtime/metrics#hdr-Supported_metrics.
+const (
+	rmHeapAllocsBytes       = "/gc/heap/allocs:bytes"
+	rmHeapAllocsObjects     = "/gc/heap/allocs:objects"
+	rmHeapFreesObjects      = "/gc/heap/frees:objects"
+	rmHeapTinyAllocsObjects = "/gc/heap/tiny/allocs:objects"
+	rmHeapObjects           = "/gc/heap/objects:objects"
+	rmHeapGoal              = "/gc/heap/goal:bytes"
+	rmGCCycles              = "/gc/cycles/total:gc-cycles"
+	rmGCCyclesForced        = "/gc/cycles/forced:gc-cycles"
+	rmMemTotal              = "/memory/classes/total:bytes"
+	rmMemHeapObjects        = "/memory/classes/heap/objects:bytes"
+	rmMemHeapUnused         = "/memory/classes/heap/unused:bytes"
+	rmMemHeapFree           = "/memory/classes/heap/free:bytes"
+	rmMemHeapReleased       = "/memory/classes/heap/released:bytes"
+	rmMemHeapStacks         = "/memory/classes/heap/stacks:bytes"
+	rmMemOSStacks           = "/memory/classes/os-stacks:bytes"
+	rmMemMSpanInuse         = "/memory/classes/metadata/mspan/inuse:bytes"
+	rmMemMSpanFree          = "/memory/classes/metadata/mspan/free:bytes"
+	rmMemMCacheInuse        = "/memory/classes/metadata/mcache/inuse:bytes"
+	rmMemMCacheFree         = "/memory/classes/metadata/mcache/free:bytes"
+	rmMemMetadataOther      = "/memory/classes/metadata/other:bytes"
+	rmMemOther              = "/memory/classes/other:bytes"
+	rmGCPauses              = "/sched/pauses/total/gc:seconds"
+	rmCPUGCTotal            = "/cpu/classes/gc/total:cpu-seconds"
+	rmCPUGCMarkIdle         = "/cpu/classes/gc/mark/idle:cpu-seconds"
+	rmCPUTotal              = "/cpu/classes/total:cpu-seconds"
+)
+
+var runtimeMetricNames = []string{
+	rmHeapAllocsBytes,
+	rmHeapAllocsObjects,
+	rmHeapFreesObjects,
+	rmHeapTinyAllocsObjects,
+	rmHeapObjects,
+	rmHeapGoal,
+	rmGCCycles,
+	rmGCCyclesForced,
+	rmMemTotal,
+	rmMemHeapObjects,
+	rmMemHeapUnused,
+	rmMemHeapFree,
+	rmMemHeapReleased,
+	rmMemHeapStacks,
+	rmMemOSStacks,
+	rmMemMSpanInuse,
+	rmMemMSpanFree,
+	rmMemMCacheInuse,
+	rmMemMCacheFree,
+	rmMemMetadataOther,
+	rmMemOther,
+	rmGCPauses,
+	rmCPUGCTotal,
+	rmCPUGCMarkIdle,
+	rmCPUTotal,
+}
+
 func readRuntimeSnapshot() runtimeSnapshot {
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
-	return runtimeSnapshot{
-		memStats:     memStats,
-		numGoroutine: int64(runtime.NumGoroutine()),
-		numCgoCall:   runtime.NumCgoCall(),
+	// Allocated per call: OTel may invoke the callback from several readers
+	// concurrently, and the slice is small.
+	samples := make([]rtmetrics.Sample, len(runtimeMetricNames))
+	for i, name := range runtimeMetricNames {
+		samples[i].Name = name
 	}
+	rtmetrics.Read(samples)
+	return runtimeSnapshotFromSamples(samples, int64(runtime.NumGoroutine()), runtime.NumCgoCall())
+}
+
+// runtimeSnapshotFromSamples derives the MemStats-equivalent values the same
+// way runtime.ReadMemStats does internally (see readmemstats_m in
+// runtime/mstats.go).
+func runtimeSnapshotFromSamples(samples []rtmetrics.Sample, numGoroutine, numCgoCall int64) runtimeSnapshot {
+	u := make(map[string]uint64, len(samples))
+	f := make(map[string]float64, len(samples))
+	var pauses *rtmetrics.Float64Histogram
+	for _, sample := range samples {
+		switch sample.Value.Kind() {
+		case rtmetrics.KindUint64:
+			u[sample.Name] = sample.Value.Uint64()
+		case rtmetrics.KindFloat64:
+			f[sample.Name] = sample.Value.Float64()
+		case rtmetrics.KindFloat64Histogram:
+			if sample.Name == rmGCPauses {
+				pauses = sample.Value.Float64Histogram()
+			}
+		}
+		// KindBad means the metric is unsupported by this Go version; leave it 0.
+	}
+
+	var gcCPUFraction float64
+	if total := f[rmCPUTotal]; total > 0 {
+		// MemStats.GCCPUFraction omits idle mark time, which is "free".
+		gcCPUFraction = (f[rmCPUGCTotal] - f[rmCPUGCMarkIdle]) / total
+	}
+
+	return runtimeSnapshot{
+		totalAlloc: u[rmHeapAllocsBytes],
+		sys:        u[rmMemTotal],
+		// MemStats counts tiny allocations as both allocated and freed.
+		mallocs:       u[rmHeapAllocsObjects] + u[rmHeapTinyAllocsObjects],
+		frees:         u[rmHeapFreesObjects] + u[rmHeapTinyAllocsObjects],
+		heapAlloc:     u[rmMemHeapObjects],
+		heapSys:       u[rmMemHeapObjects] + u[rmMemHeapUnused] + u[rmMemHeapFree] + u[rmMemHeapReleased],
+		heapIdle:      u[rmMemHeapFree] + u[rmMemHeapReleased],
+		heapInuse:     u[rmMemHeapObjects] + u[rmMemHeapUnused],
+		heapReleased:  u[rmMemHeapReleased],
+		heapObjects:   u[rmHeapObjects],
+		stackInuse:    u[rmMemHeapStacks],
+		stackSys:      u[rmMemHeapStacks] + u[rmMemOSStacks],
+		mSpanInuse:    u[rmMemMSpanInuse],
+		mSpanSys:      u[rmMemMSpanInuse] + u[rmMemMSpanFree],
+		mCacheInuse:   u[rmMemMCacheInuse],
+		mCacheSys:     u[rmMemMCacheInuse] + u[rmMemMCacheFree],
+		gcSys:         u[rmMemMetadataOther],
+		otherSys:      u[rmMemOther],
+		numGC:         u[rmGCCycles],
+		numForcedGC:   u[rmGCCyclesForced],
+		nextGC:        u[rmHeapGoal],
+		pauseTotal:    histogramTotalDuration(pauses),
+		gcCPUFraction: gcCPUFraction,
+		numGoroutine:  numGoroutine,
+		numCgoCall:    numCgoCall,
+	}
+}
+
+// histogramTotalDuration approximates the sum of all observations in a
+// runtime/metrics time histogram. runtime/metrics exposes no exact pause sum,
+// so each bucket contributes count * midpoint. Go's time histograms have four
+// sub-buckets per power of two, which bounds the error at roughly 12%.
+func histogramTotalDuration(h *rtmetrics.Float64Histogram) time.Duration {
+	if h == nil {
+		return 0
+	}
+	var seconds float64
+	for i, count := range h.Counts {
+		if count == 0 {
+			continue
+		}
+		lo, hi := h.Buckets[i], h.Buckets[i+1]
+		var value float64
+		switch {
+		case math.IsInf(lo, -1):
+			value = math.Max(hi, 0)
+		case math.IsInf(hi, 1):
+			value = lo
+		default:
+			value = (lo + hi) / 2
+		}
+		seconds += float64(count) * value
+	}
+	return time.Duration(seconds * float64(time.Second))
 }
 
 type runtimeInt64MetricDefinition struct {
@@ -51,154 +224,139 @@ var runtimeInt64MetricDefinitions = []runtimeInt64MetricDefinition{
 		name:        "process/memory_alloc",
 		description: "Number of bytes currently allocated in use",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.Alloc) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapAlloc) },
 	},
 	{
 		name:        "process/total_memory_alloc",
 		description: "Number of allocations in total",
 		unit:        UnitBytes,
 		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.TotalAlloc) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.totalAlloc) },
 	},
 	{
 		name:        "process/sys_memory_alloc",
 		description: "Number of bytes given to the process to use in total",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.Sys) },
-	},
-	{
-		name:        "process/memory_lookups",
-		description: "Cumulative number of pointer lookups performed by the runtime",
-		unit:        UnitDimensionless,
-		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.Lookups) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.sys) },
 	},
 	{
 		name:        "process/memory_malloc",
 		description: "Cumulative count of heap objects allocated",
 		unit:        UnitDimensionless,
 		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.Mallocs) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.mallocs) },
 	},
 	{
 		name:        "process/memory_frees",
 		description: "Cumulative count of heap objects freed",
 		unit:        UnitDimensionless,
 		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.Frees) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.frees) },
 	},
 	{
 		name:        "process/heap_alloc",
 		description: "Process heap allocation",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.HeapAlloc) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapAlloc) },
 	},
 	{
 		name:        "process/sys_heap",
 		description: "Bytes of heap memory obtained from the OS",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.HeapSys) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapSys) },
 	},
 	{
 		name:        "process/heap_idle",
 		description: "Bytes in idle (unused) spans",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.HeapIdle) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapIdle) },
 	},
 	{
 		name:        "process/heap_inuse",
 		description: "Bytes in in-use spans",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.HeapInuse) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapInuse) },
 	},
 	{
 		name:        "process/heap_release",
 		description: "The cumulative number of objects released from the heap",
 		unit:        UnitBytes,
 		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.HeapReleased) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapReleased) },
 	},
 	{
 		name:        "process/heap_objects",
 		description: "The number of objects allocated on the heap",
 		unit:        UnitDimensionless,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.HeapObjects) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.heapObjects) },
 	},
 	{
 		name:        "process/stack_inuse",
 		description: "Bytes in stack spans",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.StackInuse) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.stackInuse) },
 	},
 	{
 		name:        "process/sys_stack",
 		description: "The memory used by stack spans and OS thread stacks",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.StackSys) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.stackSys) },
 	},
 	{
 		name:        "process/stack_mspan_inuse",
 		description: "Bytes of allocated mspan structures",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.MSpanInuse) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.mSpanInuse) },
 	},
 	{
 		name:        "process/sys_stack_mspan",
 		description: "Bytes of memory obtained from the OS for mspan structures",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.MSpanSys) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.mSpanSys) },
 	},
 	{
 		name:        "process/stack_mcache_inuse",
 		description: "Bytes of allocated mcache structures",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.MCacheInuse) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.mCacheInuse) },
 	},
 	{
 		name:        "process/sys_stack_mcache",
 		description: "Bytes of memory obtained from the OS for mcache structures",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.MCacheSys) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.mCacheSys) },
 	},
 	{
 		name:        "process/gc_sys",
 		description: "Bytes of memory in garbage collection metadatas",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.GCSys) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.gcSys) },
 	},
 	{
 		name:        "process/other_sys",
 		description: "Bytes of memory in miscellaneous off-heap runtime allocations",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.OtherSys) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.otherSys) },
 	},
 	{
 		name:        "process/num_gc",
 		description: "Cumulative count of completed GC cycles",
 		unit:        UnitDimensionless,
 		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.NumGC) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.numGC) },
 	},
 	{
 		name:        "process/num_forced_gc",
 		description: "Cumulative count of GC cycles forced by the application",
 		unit:        UnitDimensionless,
 		cumulative:  true,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.NumForcedGC) },
+		value:       func(s runtimeSnapshot) int64 { return int64(s.numForcedGC) },
 	},
 	{
 		name:        "process/next_gc_heap_size",
 		description: "Target heap size of the next GC cycle in bytes",
 		unit:        UnitBytes,
-		value:       func(s runtimeSnapshot) int64 { return int64(s.memStats.NextGC) },
-	},
-	{
-		name:        "process/last_gc_finished_timestamp",
-		description: "Time the last garbage collection finished, as milliseconds since 1970 (the UNIX epoch)",
-		unit:        UnitMilliseconds,
-		value: func(s runtimeSnapshot) int64 {
-			return int64(s.memStats.LastGC) / int64(time.Millisecond)
-		},
+		value:       func(s runtimeSnapshot) int64 { return int64(s.nextGC) },
 	},
 	{
 		name:        "process/pause_total",
@@ -206,7 +364,7 @@ var runtimeInt64MetricDefinitions = []runtimeInt64MetricDefinition{
 		unit:        UnitMilliseconds,
 		cumulative:  true,
 		value: func(s runtimeSnapshot) int64 {
-			return int64(s.memStats.PauseTotalNs) / int64(time.Millisecond)
+			return s.pauseTotal.Milliseconds()
 		},
 	},
 	{
@@ -228,7 +386,7 @@ var runtimeFloat64MetricDefinitions = []runtimeFloat64MetricDefinition{
 		name:        "process/gc_cpu_fraction",
 		description: "Fraction of this program's available CPU time used by the GC since the program started",
 		unit:        UnitDimensionless,
-		value:       func(s runtimeSnapshot) float64 { return s.memStats.GCCPUFraction },
+		value:       func(s runtimeSnapshot) float64 { return s.gcCPUFraction },
 	},
 }
 
