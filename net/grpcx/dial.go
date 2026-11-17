@@ -8,8 +8,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"go.atoms.co/lib/statshandlerx"
 )
 
 // MaxMessageSize is a proposed default max message size of 64MB, instead of the 4MB.
@@ -37,7 +35,7 @@ func Dial(ctx context.Context, endpoint string, timeout time.Duration, opts ...g
 
 // DialNonBlocking makes a non-blocking grpc dial with tracing.
 func DialNonBlocking(ctx context.Context, endpoint string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	cc, err := grpc.DialContext(ctx, endpoint, append(opts, statshandlerx.WithClientGRPCStatsHandler())...)
+	cc, err := grpc.DialContext(ctx, endpoint, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial server at %v: %w", endpoint, err)
 	}
