@@ -2,8 +2,10 @@ package metrics
 
 import (
 	"context"
+	"math"
 	"reflect"
 	"runtime"
+	rtmetrics "runtime/metrics"
 	"strings"
 	"testing"
 	"time"
@@ -16,36 +18,31 @@ import (
 
 func fakeRuntimeSnapshot() runtimeSnapshot {
 	return runtimeSnapshot{
-		memStats: runtime.MemStats{
-			Alloc:         101,
-			TotalAlloc:    102,
-			Sys:           103,
-			Lookups:       104,
-			Mallocs:       105,
-			Frees:         106,
-			HeapAlloc:     107,
-			HeapSys:       108,
-			HeapIdle:      109,
-			HeapInuse:     110,
-			HeapReleased:  111,
-			HeapObjects:   112,
-			StackInuse:    113,
-			StackSys:      114,
-			MSpanInuse:    115,
-			MSpanSys:      116,
-			MCacheInuse:   117,
-			MCacheSys:     118,
-			GCSys:         119,
-			OtherSys:      120,
-			NumGC:         121,
-			NumForcedGC:   122,
-			NextGC:        123,
-			LastGC:        uint64(124 * time.Millisecond),
-			PauseTotalNs:  uint64(125 * time.Millisecond),
-			GCCPUFraction: 0.126,
-		},
-		numGoroutine: 127,
-		numCgoCall:   128,
+		heapAlloc:     101,
+		totalAlloc:    102,
+		sys:           103,
+		mallocs:       105,
+		frees:         106,
+		heapSys:       108,
+		heapIdle:      109,
+		heapInuse:     110,
+		heapReleased:  111,
+		heapObjects:   112,
+		stackInuse:    113,
+		stackSys:      114,
+		mSpanInuse:    115,
+		mSpanSys:      116,
+		mCacheInuse:   117,
+		mCacheSys:     118,
+		gcSys:         119,
+		otherSys:      120,
+		numGC:         121,
+		numForcedGC:   122,
+		nextGC:        123,
+		pauseTotal:    125 * time.Millisecond,
+		gcCPUFraction: 0.126,
+		numGoroutine:  127,
+		numCgoCall:    128,
 	}
 }
 
@@ -70,38 +67,36 @@ func TestOTelRuntimeMetricsPreserveLegacySchemaAndValues(t *testing.T) {
 	if readCalls != 1 {
 		t.Errorf("runtime snapshot reads = %d, want 1 per collection", readCalls)
 	}
-	if len(collected) != 28 {
-		t.Fatalf("collected metric count = %d, want 28: %v", len(collected), collected)
+	if len(collected) != 26 {
+		t.Fatalf("collected metric count = %d, want 26: %v", len(collected), collected)
 	}
 
 	wantInt64Values := map[Name]int64{
-		"process/memory_alloc":               101,
-		"process/total_memory_alloc":         102,
-		"process/sys_memory_alloc":           103,
-		"process/memory_lookups":             104,
-		"process/memory_malloc":              105,
-		"process/memory_frees":               106,
-		"process/heap_alloc":                 107,
-		"process/sys_heap":                   108,
-		"process/heap_idle":                  109,
-		"process/heap_inuse":                 110,
-		"process/heap_release":               111,
-		"process/heap_objects":               112,
-		"process/stack_inuse":                113,
-		"process/sys_stack":                  114,
-		"process/stack_mspan_inuse":          115,
-		"process/sys_stack_mspan":            116,
-		"process/stack_mcache_inuse":         117,
-		"process/sys_stack_mcache":           118,
-		"process/gc_sys":                     119,
-		"process/other_sys":                  120,
-		"process/num_gc":                     121,
-		"process/num_forced_gc":              122,
-		"process/next_gc_heap_size":          123,
-		"process/last_gc_finished_timestamp": 124,
-		"process/pause_total":                125,
-		"process/cpu_goroutines":             127,
-		"process/cpu_cgo_calls":              128,
+		"process/memory_alloc":       101,
+		"process/total_memory_alloc": 102,
+		"process/sys_memory_alloc":   103,
+		"process/memory_malloc":      105,
+		"process/memory_frees":       106,
+		"process/heap_alloc":         101,
+		"process/sys_heap":           108,
+		"process/heap_idle":          109,
+		"process/heap_inuse":         110,
+		"process/heap_release":       111,
+		"process/heap_objects":       112,
+		"process/stack_inuse":        113,
+		"process/sys_stack":          114,
+		"process/stack_mspan_inuse":  115,
+		"process/sys_stack_mspan":    116,
+		"process/stack_mcache_inuse": 117,
+		"process/sys_stack_mcache":   118,
+		"process/gc_sys":             119,
+		"process/other_sys":          120,
+		"process/num_gc":             121,
+		"process/num_forced_gc":      122,
+		"process/next_gc_heap_size":  123,
+		"process/pause_total":        125,
+		"process/cpu_goroutines":     127,
+		"process/cpu_cgo_calls":      128,
 	}
 	wantAttributes := map[string]string{
 		string(AppTagKey):      "runtime-test-app",
@@ -146,8 +141,8 @@ func TestOTelRuntimeMetricsPreserveLegacySchemaAndValues(t *testing.T) {
 			t.Errorf("%q attributes = %v, want exactly %v", definition.name, attributes, wantAttributes)
 		}
 	}
-	if cumulativeCount != 8 {
-		t.Errorf("cumulative runtime metric count = %d, want 8", cumulativeCount)
+	if cumulativeCount != 7 {
+		t.Errorf("cumulative runtime metric count = %d, want 7", cumulativeCount)
 	}
 
 	for _, definition := range runtimeFloat64MetricDefinitions {
@@ -202,7 +197,7 @@ func TestOTelRuntimeMetricsPrometheusNamesAndLabels(t *testing.T) {
 	if err != nil {
 		t.Fatalf("gather runtime metrics: %v", err)
 	}
-	wantKinds := make(map[string]string, 28)
+	wantKinds := make(map[string]string, 26)
 	for _, definition := range runtimeInt64MetricDefinitions {
 		kind := "GAUGE"
 		if definition.cumulative {
@@ -259,5 +254,98 @@ func TestOTelRuntimeMetricsPrometheusNamesAndLabels(t *testing.T) {
 			}
 		}
 		t.Errorf("found %d of %d exact runtime families; missing %v", len(foundFamilies), len(wantKinds), missing)
+	}
+}
+
+func TestRuntimeMetricNamesAreSupported(t *testing.T) {
+	supported := make(map[string]rtmetrics.ValueKind)
+	for _, description := range rtmetrics.All() {
+		supported[description.Name] = description.Kind
+	}
+	for _, name := range runtimeMetricNames {
+		if _, ok := supported[name]; !ok {
+			t.Errorf("runtime/metrics does not support %q; its value would silently read as 0", name)
+		}
+	}
+}
+
+func TestHistogramTotalDuration(t *testing.T) {
+	if got := histogramTotalDuration(nil); got != 0 {
+		t.Errorf("histogramTotalDuration(nil) = %v, want 0", got)
+	}
+	histogram := &rtmetrics.Float64Histogram{
+		Buckets: []float64{math.Inf(-1), 0, 0.001, 0.003, math.Inf(1)},
+		Counts:  []uint64{5, 2, 3, 1},
+	}
+	// -Inf bucket counts as 0, [0,1ms) as 0.5ms, [1ms,3ms) as 2ms, [3ms,+Inf) as 3ms.
+	want := 2*500*time.Microsecond + 3*2*time.Millisecond + 3*time.Millisecond
+	if got := histogramTotalDuration(histogram); got != want {
+		t.Errorf("histogramTotalDuration = %v, want %v", got, want)
+	}
+}
+
+// TestReadRuntimeSnapshotMatchesMemStats checks the runtime/metrics derivation
+// against runtime.ReadMemStats, which it replaces.
+func TestReadRuntimeSnapshotMatchesMemStats(t *testing.T) {
+	runtime.GC()
+	runtime.GC()
+
+	snapshot := readRuntimeSnapshot()
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	// GC counters cannot move between the two reads without another GC.
+	if snapshot.numGC != uint64(memStats.NumGC) {
+		t.Errorf("numGC = %d, MemStats.NumGC = %d", snapshot.numGC, memStats.NumGC)
+	}
+	if snapshot.numForcedGC != uint64(memStats.NumForcedGC) {
+		t.Errorf("numForcedGC = %d, MemStats.NumForcedGC = %d", snapshot.numForcedGC, memStats.NumForcedGC)
+	}
+	if snapshot.nextGC != memStats.NextGC {
+		t.Errorf("nextGC = %d, MemStats.NextGC = %d", snapshot.nextGC, memStats.NextGC)
+	}
+	if diff := math.Abs(snapshot.gcCPUFraction - memStats.GCCPUFraction); diff > 1e-9 {
+		t.Errorf("gcCPUFraction = %v, MemStats.GCCPUFraction = %v", snapshot.gcCPUFraction, memStats.GCCPUFraction)
+	}
+	wantPause := time.Duration(memStats.PauseTotalNs)
+	if diff := snapshot.pauseTotal - wantPause; diff < -wantPause/4 || diff > wantPause/4 {
+		t.Errorf("pauseTotal = %v, MemStats.PauseTotalNs = %v; want within 25%%", snapshot.pauseTotal, wantPause)
+	}
+
+	// Memory values can drift slightly between the two reads. heapReleased is
+	// not compared: the background scavenger can release megabytes between the
+	// reads. It is a direct 1:1 read of /memory/classes/heap/released:bytes, and
+	// heapIdle (free + released) still covers it.
+	approx := []struct {
+		name string
+		got  uint64
+		want uint64
+	}{
+		{"totalAlloc", snapshot.totalAlloc, memStats.TotalAlloc},
+		{"sys", snapshot.sys, memStats.Sys},
+		{"mallocs", snapshot.mallocs, memStats.Mallocs},
+		{"frees", snapshot.frees, memStats.Frees},
+		{"heapAlloc", snapshot.heapAlloc, memStats.HeapAlloc},
+		{"heapSys", snapshot.heapSys, memStats.HeapSys},
+		{"heapIdle", snapshot.heapIdle, memStats.HeapIdle},
+		{"heapInuse", snapshot.heapInuse, memStats.HeapInuse},
+		{"heapObjects", snapshot.heapObjects, memStats.HeapObjects},
+		{"stackInuse", snapshot.stackInuse, memStats.StackInuse},
+		{"stackSys", snapshot.stackSys, memStats.StackSys},
+		{"mSpanInuse", snapshot.mSpanInuse, memStats.MSpanInuse},
+		{"mSpanSys", snapshot.mSpanSys, memStats.MSpanSys},
+		{"mCacheInuse", snapshot.mCacheInuse, memStats.MCacheInuse},
+		{"mCacheSys", snapshot.mCacheSys, memStats.MCacheSys},
+		{"gcSys", snapshot.gcSys, memStats.GCSys},
+		{"otherSys", snapshot.otherSys, memStats.OtherSys},
+	}
+	for _, value := range approx {
+		if value.want == 0 {
+			continue
+		}
+		ratio := float64(value.got) / float64(value.want)
+		if ratio < 0.8 || ratio > 1.2 {
+			t.Errorf("%s = %d, MemStats = %d; want within 20%%", value.name, value.got, value.want)
+		}
 	}
 }
