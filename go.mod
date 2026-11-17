@@ -10,7 +10,6 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.atoms.co/iox v1.0.0
 	go.atoms.co/slicex v1.1.0
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.46.0
 	go.opentelemetry.io/otel/metric v1.39.0
